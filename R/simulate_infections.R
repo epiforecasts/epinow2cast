@@ -64,38 +64,9 @@ simulate_infections <- function(R,
                                 day_of_week_effect = NULL,
                                 generation_time = generation_time_opts(),
                                 delays = delay_opts(),
-                                truncation = trunc_opts(),
                                 obs = obs_opts(),
                                 CrIs = c(0.2, 0.5, 0.9),
-                                backend = "rstan",
-                                seeding_time = NULL,
-                                pop = Fixed(0),
-                                pop_period = c("forecast", "all"),
-                                pop_floor = 1.0,
-                                growth_method = c("infections",
-                                                  "infectiousness")) {
-  if (is.numeric(pop)) {
-    lifecycle::deprecate_stop(
-      "1.9.0",
-      "simulate_infections(pop = 'must be a `<dist_spec>`')",
-      details = paste(
-        "Population size must now be specified as a distribution.",
-        "For a fixed known population, wrap the value with `Fixed()`.",
-        "For example: `simulate_infections(..., pop = Fixed(1000000))`."
-      )
-    )
-  }
-  assert_class(pop, "dist_spec")
-  pop_period <- arg_match(pop_period)
-  if (pop_period == "all" && pop == Fixed(0)) {
-    cli_abort(
-      c(
-        "!" = "pop_period = \"all\" but pop is fixed at 0."
-      )
-    )
-  }
-
-  ## check inputs
+                                seeding_time = NULL) {
   assert_data_frame(R, any.missing = FALSE)
   assert_subset(c("date", "R"), colnames(R))
   assert_date(R$date)
@@ -105,140 +76,96 @@ simulate_infections <- function(R,
   if (!is.null(seeding_time)) {
     assert_integerish(seeding_time, lower = 1)
   }
-  assert_class(delays, "delay_opts")
-  assert_class(truncation, "trunc_opts")
-  assert_class(obs, "obs_opts")
   assert_class(generation_time, "generation_time_opts")
-  assert_class(pop, "dist_spec")
-  assert_number(pop_floor, lower = 0, finite = TRUE)
-  growth_method <- arg_match(growth_method)
+  assert_class(delays, "delay_opts")
+  assert_class(obs, "obs_opts")
 
-  ## create R for all dates modelled
-  all_dates <- data.table(date = seq.Date(min(R$date), max(R$date), by = "day"))
-  R <- merge.data.table(all_dates, R, by = "date", all.x = TRUE)
-  R <- R[, R := nafill(R, type = "locf")]
-  ## remove any initial NAs
+  # Get generation time PMF
+  gt_pmf <- gt_to_enw(generation_time)
+  gt_len <- length(gt_pmf)
+
+  # Get delay PMF
+  delay_pmf <- delays_to_enw(delays)
+
+  # Fill in R for all dates
+  all_dates <- data.table::data.table(
+    date = seq.Date(min(R$date), max(R$date), by = "day")
+  )
+  R <- data.table::merge.data.table(all_dates, R, by = "date", all.x = TRUE)
+  R <- R[, R := data.table::nafill(R, type = "locf")]
   R <- R[!is.na(R)]
 
-  if (missing(seeding_time)) {
-    seeding_time <- sum(max(generation_time))
+  if (is.null(seeding_time)) {
+    seeding_time <- gt_len
   }
 
-  stan_data <- list(
-    n = 1,
-    t = nrow(R) + seeding_time,
-    seeding_time = seeding_time,
-    future_time = 0,
-    initial_infections = array(log(initial_infections), dim = c(1, 1)),
-    initial_as_scale = 0,
-    R = array(R$R, dim = c(1, nrow(R))),
-    use_pop = as.integer(pop != Fixed(0)) + as.integer(pop_period == "all"),
-    pop_floor = pop_floor,
-    growth_method = list(
-      "infections" = 0, "infectiousness" = 1
-    )[[growth_method]]
-  )
-
-  stan_data <- c(stan_data, create_stan_delays(
-    generation_time = generation_time,
-    reporting = delays,
-    truncation = truncation
+  # Seed infections using exponential growth implied by first R value
+  r0 <- log(R$R[1]) / sum(seq_along(gt_pmf) * gt_pmf)
+  seed_infections <- initial_infections * exp(r0 * seq(
+    -(seeding_time - 1), 0
   ))
 
-  if (length(stan_data$delay_params_sd) > 0 &&
-        any(stan_data$delay_params_sd > 0)) {
-    cli_abort(
-      c(
-        "!" = "Cannot simulate from uncertain parameters.",
-        "i" = "Use {.fn fix_parameters} to set the parameters of uncertain
-        distributions using either the mean or a randomly sampled value."
-      )
-    )
-  }
-  stan_data$delay_params <- array(
-    stan_data$delay_params_mean,
-    dim = c(1, length(stan_data$delay_params_mean))
-  )
-  stan_data$delay_params_sd <- NULL
+  # Simulate infections via renewal equation
+  n_t <- nrow(R)
+  infections <- numeric(seeding_time + n_t)
+  infections[seq_len(seeding_time)] <- seed_infections
 
-  stan_data <- c(stan_data, create_obs_model(
-    obs,
-    dates = R$date
-  ))
-
-  if (get_distribution(obs$scale) != "fixed") {
-    cli_abort(
-      c(
-        "!" = "Cannot simulate from uncertain observation scaling.",
-        "i" = "Use fixed scaling instead."
-      )
-    )
+  for (t in seq_len(n_t)) {
+    idx <- seeding_time + t
+    past <- infections[max(1, idx - gt_len):(idx - 1)]
+    gt_use <- rev(gt_pmf[seq_len(length(past))])
+    infections[idx] <- R$R[t] * sum(past * gt_use)
   }
 
-  if (obs$family == "negbin") {
-    if (get_distribution(obs$dispersion) != "fixed") {
-      cli_abort(
-        c(
-          "!" = "Cannot simulate from uncertain dispersion.",
-          "i" = "Use fixed dispersion instead."
-        )
-      )
-    }
+  # Convolve with reporting delay
+  if (length(delay_pmf) > 1) {
+    reported <- stats::convolve(infections, rev(delay_pmf), type = "open")
+    reported <- reported[seq_len(length(infections))]
   } else {
-    obs$dispersion <- NULL
+    reported <- infections
   }
 
-  params <- list(
-    make_param("alpha", NULL),
-    make_param("rho", NULL),
-    make_param("R0", NULL),
-    make_param("fraction_observed", obs$scale, lower_bound = 0),
-    make_param("reporting_overdispersion", obs$dispersion, lower_bound = 0),
-    make_param("pop", pop, lower_bound = 0)
-  )
-
-  stan_data <- c(stan_data, create_stan_params(params))
-
-  ## set empty params matrix - variable parameters not supported here
-  stan_data$params <- array(dim = c(1, 0))
-
-  ## day of week effect
-  if (is.null(day_of_week_effect)) {
-    day_of_week_effect <- rep(1, stan_data$week_effect)
+  # Apply day-of-week effect
+  if (!is.null(day_of_week_effect)) {
+    day_of_week_effect <- day_of_week_effect / sum(day_of_week_effect) *
+      length(day_of_week_effect)
+    all_dates_full <- seq.Date(
+      min(R$date) - seeding_time, max(R$date), by = "day"
+    )
+    dow <- as.integer(format(all_dates_full, "%u"))
+    reported <- reported * day_of_week_effect[dow]
   }
 
-  day_of_week_effect <- day_of_week_effect / sum(day_of_week_effect)
-  stan_data$day_of_week_simplex <- array(
-    day_of_week_effect,
-    dim = c(1, stan_data$week_effect)
-  )
+  # Apply observation model
+  reported <- pmax(reported, 0)
+  if (obs$family == "poisson") {
+    reported_obs <- stats::rpois(length(reported), lambda = reported)
+  } else {
+    phi <- mean(fix_parameters(obs$dispersion))
+    reported_obs <- stats::rnbinom(
+      length(reported), mu = reported, size = 1 / phi^2
+    )
+  }
 
-  # Create stan arguments
-  stan <- stan_opts(backend = backend, chains = 1, samples = 1, warmup = 1)
-  stan_args <- create_stan_args(
-    stan,
-    data = stan_data, fixed_param = TRUE, model = "simulate_infections",
-    verbose = FALSE
-  )
-
-  ## simulate
-  sim <- fit_model(stan_args, id = "simulate_infections")
-
-  ## join batches
+  # Build output
   dates <- c(
     seq(min(R$date) - seeding_time, min(R$date) - 1, by = "day"),
     R$date
   )
-  out <- format_simulation_output(sim, stan_data,
-    reported_inf_dates = dates,
-    reported_dates = dates[-(1:seeding_time)],
-    imputed_dates = dates[-(1:seeding_time)],
-    drop_length_1 = TRUE
+  reported_dates <- R$date
+
+  inf_dt <- data.table::data.table(
+    variable = "infections",
+    date = dates,
+    value = infections
+  )
+  rep_dt <- data.table::data.table(
+    variable = "reported_cases",
+    date = reported_dates,
+    value = reported_obs[(seeding_time + 1):length(reported_obs)]
   )
 
-  out <- rbindlist(out[c("infections", "reported_cases")], idcol = "variable")
-  out <- out[, c("sample", "time") := NULL]
-
+  out <- data.table::rbindlist(list(inf_dt, rep_dt))
   out[]
 }
 
