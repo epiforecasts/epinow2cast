@@ -19,6 +19,13 @@ knitr::opts_chunk$set(
 )
 ```
 
+> **Note:** Since EpiNow2 v2.0.0, the package uses
+> [epinowcast](https://package.epinowcast.org/) as its computational backend.
+> The Gaussian process prior and back-calculation model described below are no
+> longer available. The default model now uses a random walk prior for the
+> reproduction number. The renewal equation and observation model sections
+> remain accurate.
+
 # Infection model
 
 `estimate_infections()` supports a range of model formulations. Here we describe the most commonly used and highlight other options.

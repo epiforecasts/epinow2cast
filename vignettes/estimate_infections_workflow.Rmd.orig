@@ -24,7 +24,7 @@ set.seed(42)
 ```
 
 This vignette describes the typical workflow for estimating reproduction numbers and performing short-term forecasts for a disease spreading in a given setting using _EpiNow2_.
-The vignette uses the default non-stationary Gaussian process model included in the package.
+The vignette uses the default random walk model included in the package.
 See other vignettes for a more thorough exploration of [alternative model variants](estimate_infections_options.html) and [theoretical background](estimate_infections.html).
 
 # Data
@@ -106,8 +106,7 @@ There are various ways the specific delay distributions mentioned below might be
 Often, they will come directly from the existing literature reviewed by the user and studies conducted elsewhere.
 Sometimes it might be possible to obtain them from existing databases, e.g. using the [epiparameter](https://github.com/epiverse-trace/epiparameter) R package.
 Alternatively they might be obtainable from raw data, e.g. line-listed individual-level records.
-The _EpiNow2_ package contains functionality for estimating delay distributions from observed delays in the `estimate_delay()` function.
-For a more comprehensive treatment of delays and their estimation avoiding common biases one can also consider the [epidist](https://epidist.epinowcast.org/index.html) R package.
+For a comprehensive treatment of delays and their estimation avoiding common biases one can consider the [epidist](https://epidist.epinowcast.org/index.html) R package.
 
 ### Generation intervals
 
@@ -169,20 +168,7 @@ For example, data reported by symptom onset may only become part of the dataset 
 Statistically, this means our data is right-truncated.
 In practice, it means that recent data will be unlikely to be complete.
 
-The amount of such truncation that exists in the data can be estimated from multiple snapshots of the data, i.e. what the data looked like at multiple past dates.
-One can then use methods that use the amount of backfilling that occurred 1, 2, ... days after data for a date are first reported.
-In _EpiNow2_, this can be done using the `estimate_truncation()` method which returns, amongst others, posterior estimates of the truncation distribution.
-For more details on the model used for this, see the [estimate_truncation](estimate_truncation.html) vignette.
-
-```{r eval = FALSE}
-?estimate_truncation
-```
-
-In the `estimate_infections()` function, the truncation distribution is defined by a call to `trunc_opts()`, a function that takes a single argument defined as a `dist_spec` (either defined by the user or obtained from a call to `estimate_truncation()` or any other method for estimating right truncation).
-This will then be used to correct for right truncation in the data.
-
-The separation of estimation of right truncation on the one hand and estimation of the reproduction number on the other may be attractive for practical purposes but is questionable statistically as it separates two processes that are not strictly separable, potentially introducing a bias.
-An alternative approach where these are estimated jointly is being implemented in the [epinowcast](https://package.epinowcast.org/) package, which is being developed by the _EpiNow2_ developers with collaborators.
+For jointly estimating truncation and the reproduction number, consider using the [epinowcast](https://package.epinowcast.org/) package directly, which handles this natively.
 
 ## Completeness of reporting
 
@@ -226,18 +212,12 @@ def <- estimate_infections(
   reported_cases,
   generation_time = gt_opts(generation_time),
   delays = delay_opts(delay),
-  rt = rt_opts(prior = rt_prior),
+  rt = rt_opts(prior = rt_prior, rw = 7),
   forecast = forecast_opts(horizon = 7)
 )
 ```
 
 Alternatively, for production environments, we recommend using the `epinow()` function. It uses `estimate_infections()` internally and provides functionality for logging and saving results and plots in dedicated directories in the user's file system.
-
-## Forecasting secondary outcomes
-
-The `estimate_infections()` function works with a single time series of outcomes such as cases by symptom onset or hospitalisations.
-Sometimes one wants to further create forecasts of other secondary outcomes such as deaths.
-The package contains functionality to estimate the delay and scaling between multiple time series with the `estimate_secondary()` function, as well as for using this to make forecasts with the `forecast_secondary()` function.
 
 # Interpretation
 
