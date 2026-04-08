@@ -94,10 +94,7 @@
 epinow <- function(data,
                    generation_time = gt_opts(),
                    delays = delay_opts(),
-                   truncation = trunc_opts(),
                    rt = rt_opts(),
-                   backcalc = backcalc_opts(),
-                   gp = gp_opts(),
                    obs = obs_opts(),
                    forecast = forecast_opts(),
                    stan = stan_opts(),
@@ -109,7 +106,7 @@ epinow <- function(data,
                    ),
                    plot_args = list(),
                    target_folder = NULL, target_date,
-                   logs = tempdir(), id = "epinow", verbose = interactive()) {
+                   logs = tempdir(), verbose = interactive()) {
   # Check inputs
   assert_logical(return_output)
   stopifnot(
@@ -182,15 +179,11 @@ epinow <- function(data,
       data = reported_cases,
       generation_time = generation_time,
       delays = delays,
-      truncation = truncation,
       rt = rt,
-      backcalc = backcalc,
-      gp = gp,
       obs = obs,
       forecast = forecast,
       stan = stan,
-      verbose = verbose,
-      id = id
+      verbose = verbose
     )
 
     save_estimate_infections(estimates, target_folder,
