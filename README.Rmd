@@ -33,28 +33,15 @@ Uncertainty is propagated from all inputs into the final parameter estimates, he
 
 <details> <summary> Models provided </summary>
 
-`{EpiNow2}` provides three models:
+`{EpiNow2}` provides:
 
-* `estimate_infections()`: Reconstruct cases by date of infection from reported cases.
+* `estimate_infections()`: Reconstruct cases by date of infection from reported cases using a renewal equation model with random walk priors on the time-varying reproduction number.
 
-* `estimate_secondary()`: Estimate the relationship between primary and secondary observations, for example, deaths (secondary) based on hospital admissions (primary), or bed occupancy (secondary) based on hospital admissions (primary).
+* `simulate_infections()`: Simulate infections from a given reproduction number trajectory.
 
-* `estimate_truncation()`: Estimate a truncation distribution from multiple snapshots of the same data source over time. For more flexibility, check out the [`{epinowcast}`](https://package.epinowcast.org/) package.
+The default model in `estimate_infections()` uses a random walk prior to estimate the time-varying reproduction number and infer infections. It accounts for reporting delays, day-of-week effects, and observation overdispersion (Poisson or negative binomial).
 
-
-The default model in `estimate_infections()` uses a non-stationary Gaussian process to estimate the time-varying reproduction number and infer infections. Other options, which generally reduce runtimes at the cost of the granularity of estimates or real-time performance, include:
-
-* A stationary Gaussian process (faster to estimate but currently gives reduced performance for real time estimates).
-* User specified breakpoints.
-* A fixed reproduction number.
-* A piecewise constant, combining a fixed reproduction number with breakpoints.
-* A random walk, combining a fixed reproduction number with regularly spaced breakpoints (i.e weekly).
-* A deconvolution/back-calculation method for inferring infections, followed with calculating the time-varying reproduction number.
-* Adjustment for the remaining susceptible population beyond the forecast horizon.
-
-By default, all these models are fit with [MCMC sampling](https://mc-stan.org/docs/reference-manual/mcmc.html) using the [`rstan`](https://mc-stan.org/users/interfaces/rstan) R package as the backend. Users can, however, switch to use approximate algorithms like [variational inference](https://en.wikipedia.org/wiki/Variational_Bayesian_methods), the [pathfinder](https://mc-stan.org/docs/reference-manual/pathfinder.html) algorithm, or [Laplace approximation](https://mc-stan.org/docs/reference-manual/laplace.html) especially for quick prototyping. The latter two methods are provided through the [`cmdstanr`](https://mc-stan.org/cmdstanr/) R package, so users will have to install that separately.
-
-The documentation for `estimate_infections` provides examples of the implementation of the different options available. 
+Since version 2.0.0, `{EpiNow2}` uses the [`{epinowcast}`](https://package.epinowcast.org/) package as its computational backend, replacing the previous Stan-based implementation. Models are fit with [MCMC sampling](https://mc-stan.org/docs/reference-manual/mcmc.html) via [`cmdstanr`](https://mc-stan.org/cmdstanr/).
 
 `{EpiNow2}` is designed to be used via a single function call to two functions:
 
@@ -102,9 +89,7 @@ if (!require("remotes")) {
 remotes::install_github("epiforecasts/EpiNow2")
 ```
 
-To build `{EpiNow2}` from source, users will need to configure their C toolchain. This is because `{EpiNow2}` implements the underlying models in Stan (a statistical modelling programming language), which is built on C++.
-
-Each operating system has a different set up procedure. Windows users need to install an appropriate version of [RTools](https://github.com/stan-dev/rstan/wiki/Configuring-C---Toolchain-for-Windows). Mac users can [follow these steps](https://github.com/stan-dev/rstan/wiki/Configuring-C---Toolchain-for-Mac), and Linux users can use [this guide](https://github.com/stan-dev/rstan/wiki/Configuring-C-Toolchain-for-Linux).
+`{EpiNow2}` requires [`cmdstanr`](https://mc-stan.org/cmdstanr/) and a working CmdStan installation. See the [cmdstanr documentation](https://mc-stan.org/cmdstanr/articles/cmdstanr.html) for installation instructions.
 
 ## Resources
 
