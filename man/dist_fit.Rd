@@ -4,21 +4,20 @@
 \alias{dist_fit}
 \title{Fit an Integer Adjusted Exponential, Gamma or Lognormal distributions}
 \usage{
-dist_fit(
-  values = NULL,
-  samples = 1000,
-  cores = 1,
-  chains = 2,
-  dist = "exp",
-  verbose = FALSE,
-  backend = "rstan"
-)
+dist_fit(values = NULL, ...)
 }
 \arguments{
 \item{values}{Numeric vector of values}
 
+\item{...}{Additional parameters to pass to underlying option functions,
+\code{\link[=stan_sampling_opts]{stan_sampling_opts()}} or \code{\link[=stan_vb_opts]{stan_vb_opts()}}, depending on the method}
+
 \item{samples}{Numeric, number of samples to take. Must be >= 1000.
 Defaults to 1000.}
+
+\item{dist}{Character string, which distribution to fit. Defaults to
+exponential (\code{"exp"}) but gamma (\code{"gamma"}) and lognormal (\code{"lognormal"}) are
+also supported.}
 
 \item{cores}{Numeric, defaults to 1. Number of CPU cores to use (no effect
 if greater than the number of chains).}
@@ -26,15 +25,8 @@ if greater than the number of chains).}
 \item{chains}{Numeric, defaults to 2. Number of MCMC chains to use. More is
 better with the minimum being two.}
 
-\item{dist}{Character string, which distribution to fit. Defaults to
-exponential (\code{"exp"}) but gamma (\code{"gamma"}) and lognormal (\code{"lognormal"}) are
-also supported.}
-
 \item{verbose}{Logical, defaults to FALSE. Should verbose progress messages
 be printed.}
-
-\item{backend}{Character string indicating the backend to use for fitting
-stan models. Supported arguments are "rstan" (default) or "cmdstanr".}
 }
 \value{
 A stan fit of an interval censored distribution

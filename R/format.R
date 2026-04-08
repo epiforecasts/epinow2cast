@@ -79,7 +79,6 @@ format_fit <- function(posterior_samples, horizon, shift, CrIs) {
 #' @inheritParams extract_samples
 #' @return A list of `<data.frame>`'s each containing the simulated trajectories
 #' of each parameter, or a single merged data.table if merge = TRUE.
-#' @importFrom rstan extract
 #' @importFrom data.table data.table
 #' @keywords internal
 format_simulation_output <- function(stan_fit, data, reported_dates,

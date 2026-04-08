@@ -5,21 +5,16 @@
 \title{Fit a Subsampled Bootstrap to Integer Values and Summarise Distribution
 Parameters}
 \usage{
-bootstrapped_dist_fit(
-  values,
-  dist = "lognormal",
-  samples = 2000,
-  bootstraps = 10,
-  bootstrap_samples = 250,
-  max_value,
-  verbose = FALSE
-)
+bootstrapped_dist_fit(values, ...)
 }
 \arguments{
 \item{values}{Integer vector of values.}
 
 \item{dist}{Character string, which distribution to fit. Defaults to
 lognormal (\code{"lognormal"}) but gamma (\code{"gamma"}) is also supported.}
+
+\item{verbose}{Logical, defaults to \code{FALSE}. Should progress messages be
+printed.}
 
 \item{samples}{Numeric, number of samples to take overall from the
 bootstrapped posteriors.}
@@ -34,9 +29,6 @@ distribution is less than its value.}
 
 \item{max_value}{Numeric, defaults to the maximum value in the observed
 data. Maximum delay to  allow (added to output but does impact fitting).}
-
-\item{verbose}{Logical, defaults to \code{FALSE}. Should progress messages be
-printed.}
 }
 \value{
 A \verb{<dist_spec>} object summarising the bootstrapped distribution

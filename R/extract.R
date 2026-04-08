@@ -229,7 +229,6 @@ extract_delays <- function(samples, args) {
 #' @export
 #'
 #' @importFrom data.table data.table melt setkey
-#' @importFrom rstan extract
 extract_samples <- function(stan_fit, pars = NULL, include = TRUE) {
   if (inherits(stan_fit, "stanfit")) {
     extract_args <- list(object = stan_fit, include = include)
@@ -313,7 +312,6 @@ extract_samples <- function(stan_fit, pars = NULL, include = TRUE) {
 #' @export
 #' @importFrom posterior mcse_mean
 #' @importFrom data.table as.data.table :=
-#' @importFrom rstan summary
 extract_stan_param <- function(fit, params = NULL,
                                CrIs = c(0.2, 0.5, 0.9), var_names = FALSE) {
   # generate symmetric CrIs
@@ -384,7 +382,6 @@ extract_stan_param <- function(fit, params = NULL,
 #' named list.
 #'
 #' @importFrom purrr map
-#' @importFrom rstan extract
 #' @importFrom utils modifyList
 #' @export
 extract_inits <- function(fit, current_inits,

@@ -154,7 +154,6 @@ dist_fit_old <- function(values = NULL, samples = 1000, cores = 1,
 #'
 #' @return A `<dist_spec>` object summarising the bootstrapped distribution
 #' @importFrom purrr list_transpose
-#' @importFrom rstan extract
 #' @importFrom data.table data.table rbindlist
 #' @importFrom cli cli_abort col_blue
 #' @export

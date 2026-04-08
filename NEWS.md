@@ -1,30 +1,22 @@
-# EpiNow2 (development version)
+# EpiNow2 2.0.0
 
-## Bug fixes
+## Package changes
 
-- Fixed a bug in `forecast_infections()` where the summary call to extract dates was using modified args instead of the original fit dimensions, causing a date-dimension mismatch when extending the R trajectory beyond the original observation period.
+- Replaced the internal Stan modelling backend with the epinowcast package. All estimation in `estimate_infections()` is now performed via epinowcast, eliminating all Stan code from the package.
+- The package now requires `cmdstanr` and a CmdStan installation (via the epinowcast dependency). The `rstan` backend is no longer supported.
+- `simulate_infections()` has been rewritten in pure R using the renewal equation directly.
 
 ## Breaking changes
 
-- Removed deprecated arguments that have been erroring since v1.7.0/v1.8.0:
-  - `gp_opts(ls_mean, ls_sd, ls_min, ls_max)` - use `ls` instead
-  - `gp_opts(alpha_mean, alpha_sd)` - use `alpha` instead
-  - `obs_opts(phi)` - use `dispersion` instead
-  - `obs_opts(na)` - use `fill_missing()` instead
-  - `estimate_infections(filter_leading_zeros, zero_threshold, horizon)`
-  - `estimate_secondary(filter_leading_zeros, zero_threshold)`
-  - `epinow(filter_leading_zeros, zero_threshold, horizon)`
-  - `regional_epinow(horizon)`
-  - `format_fit(burn_in, start_date)`
-- Removed the internal function `default_fill_missing_obs()`.
-- The `pop` argument in `rt_opts()` and `simulate_infections()` now errors when passed a numeric value. Use `Fixed(pop)` instead.
-- Deprecated accessors on model objects now error instead of warning:
-  - `estimate_infections()`: `$samples`, `$summarised`
-  - `estimate_secondary()`: `$predictions`, `$posterior`, `$data`
-  - `estimate_truncation()`: `$dist`, `$obs`, `$data`, `$last_obs`, `$cmf`
-  - `epinow()`: `$estimates`, `$estimated_reported_cases`, `$summary`, `$plots`, `$estimate_infections`
-- `summary.epinow(output)` and `summary.estimate_infections(type = 'samples')` now error.
-- Removed internal function `extract_parameter_samples()`. Use `format_simulation_output()` instead.
+- Removed Gaussian process support. The `gp` and `gp_opts()` arguments to `estimate_infections()` are no longer available. Use `rt_opts(rw = 7)` for a weekly random walk as an alternative.
+- Removed back-calculation mode. The `backcalc` and `backcalc_opts()` arguments are no longer available. Use the renewal model with `rt_opts()` instead.
+- Removed truncation adjustment from `estimate_infections()`. The `truncation` argument is no longer available. Use `estimate_truncation()` to preprocess truncated data, or use the epinowcast package directly for joint truncation estimation.
+- Removed population depletion adjustment. The `pop` argument in `rt_opts()` is no longer available.
+- Removed `estimate_secondary()`, `simulate_secondary()`, `forecast_secondary()`, and `secondary_opts()`. Consider using the epinowcast package directly for modelling relationships between primary and secondary observations.
+- Removed `forecast_infections()`. Use `estimate_infections()` with `forecast = forecast_opts(horizon = N)` instead.
+- Removed `dist_fit()` and `bootstrapped_dist_fit()`. Consider using the fitdistrplus or primarycensored packages instead.
+- Removed the `id` argument from `estimate_infections()` and `epinow()`.
+- The `gp`, `backcalc`, and `truncation` arguments to `epinow()` and `regional_epinow()` have been removed.
 
 # EpiNow2 1.8.0
 

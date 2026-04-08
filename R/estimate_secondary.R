@@ -67,7 +67,6 @@
 #' @inheritParams estimate_infections
 #' @inheritParams update_secondary_args
 #' @inheritParams calc_CrIs
-#' @importFrom rstan sampling
 #' @importFrom lubridate wday
 #' @importFrom data.table as.data.table merge.data.table nafill
 #' @importFrom utils modifyList
@@ -596,7 +595,6 @@ convolve_and_scale <- function(data, type = c("incidence", "prevalence"),
 #' of forecast secondary observation posterior samples, and `forecast` a summary
 #' of the forecast secondary observation posterior.
 #'
-#' @importFrom rstan extract sampling
 #' @importFrom data.table rbindlist merge.data.table as.data.table setorderv
 #' @importFrom data.table setcolorder copy
 #' @importFrom lubridate days wday

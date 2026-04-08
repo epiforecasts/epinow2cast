@@ -4,20 +4,14 @@
 \alias{forecast_secondary}
 \title{Forecast Secondary Observations Given a Fit from estimate_secondary}
 \usage{
-forecast_secondary(
-  estimate,
-  primary,
-  primary_variable = "reported_cases",
-  model = NULL,
-  backend = "rstan",
-  samples = NULL,
-  all_dates = FALSE,
-  CrIs = c(0.2, 0.5, 0.9)
-)
+forecast_secondary(estimate, ...)
 }
 \arguments{
 \item{estimate}{An object of class "estimate_secondary" as produced by
 \code{\link[=estimate_secondary]{estimate_secondary()}}.}
+
+\item{...}{Additional parameters to pass to underlying option functions,
+\code{\link[=stan_sampling_opts]{stan_sampling_opts()}} or \code{\link[=stan_vb_opts]{stan_vb_opts()}}, depending on the method}
 
 \item{primary}{A \verb{<data.frame>} containing at least \code{date} and \code{value}
 (integer) variables and optionally \code{sample}. Used as the primary observation
@@ -33,17 +27,12 @@ defaulting to "reported_cases". Only used when primary is of class
 
 \item{model}{A compiled stan model as returned by \code{\link[rstan:stan_model]{rstan::stan_model()}}.}
 
-\item{backend}{Character string indicating the backend to use for fitting
-stan models. Supported arguments are "rstan" (default) or "cmdstanr".}
-
 \item{samples}{Numeric, number of posterior samples to simulate from. The
 default is to use all samples in the \code{primary} input when present. If not
 present the default is to use 1000 samples.}
 
 \item{all_dates}{Logical, defaults to FALSE. Should a forecast for all dates
 and not just those in the forecast horizon be returned.}
-
-\item{CrIs}{Numeric vector of credible intervals to calculate.}
 }
 \value{
 A list containing: \code{predictions} (a \verb{<data.frame>} ordered by date

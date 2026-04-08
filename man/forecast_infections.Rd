@@ -5,20 +5,17 @@
 \title{Forecast infections from a given fit and trajectory of the time-varying
 reproduction number}
 \usage{
-forecast_infections(
-  estimates,
-  R = NULL,
-  model = NULL,
-  samples = NULL,
-  batch_size = 10,
-  backend = "rstan",
-  verbose = interactive()
-)
+forecast_infections(estimates, ...)
 }
 \arguments{
 \item{estimates}{The \code{estimates} element of an \code{\link[=epinow]{epinow()}} run that
 has been done with output = "fit", or the result of
 \code{\link[=estimate_infections]{estimate_infections()}} with \code{return_fit} set to TRUE.}
+
+\item{...}{Additional parameters to pass to underlying option functions,
+\code{\link[=stan_sampling_opts]{stan_sampling_opts()}} or \code{\link[=stan_vb_opts]{stan_vb_opts()}}, depending on the method}
+
+\item{model}{A compiled stan model as returned by \code{\link[rstan:stan_model]{rstan::stan_model()}}.}
 
 \item{R}{A numeric vector of reproduction numbers; these will overwrite the
 reproduction numbers contained in \code{estimates}, except elements set to
@@ -26,17 +23,12 @@ NA. Alternatively accepts a \verb{<data.frame>} containing at least \code{date} 
 \code{value} (integer) variables and optionally \code{sample}. More (or fewer) days
 than in the original fit can be simulated.}
 
-\item{model}{A compiled stan model as returned by \code{\link[rstan:stan_model]{rstan::stan_model()}}.}
-
 \item{samples}{Numeric, number of posterior samples to simulate from. The
 default is to use all samples in the \code{estimates} input.}
 
 \item{batch_size}{Numeric, defaults to 10. Size of batches in which to
 simulate. May decrease run times due to reduced IO costs but this is still
 being evaluated. If set to NULL then all simulations are done at once.}
-
-\item{backend}{Character string indicating the backend to use for fitting
-stan models. Supported arguments are "rstan" (default) or "cmdstanr".}
 
 \item{verbose}{Logical defaults to \code{\link[=interactive]{interactive()}}. If the \code{progressr}
 package is available, a progress bar will be shown.}

@@ -153,7 +153,6 @@ merge_trunc_pred_obs <- function(observations, predictions) {
 #' @inheritParams calc_CrIs
 #' @inheritParams estimate_infections
 #' @importFrom purrr map reduce map_dbl walk
-#' @importFrom rstan sampling
 #' @importFrom data.table copy .N as.data.table merge.data.table setDT
 #' @importFrom data.table setcolorder
 #' @importFrom rlang arg_match

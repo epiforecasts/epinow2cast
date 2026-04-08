@@ -245,7 +245,6 @@ match_output_arguments <- function(input_args = NULL,
 #'
 #' @return No return value, called for side effects
 #' @export
-#' @importFrom rstan expose_stan_functions stanc
 #' @importFrom purrr map_chr
 expose_stan_fns <- function(files, target_dir, ...) {
   functions <- paste0(

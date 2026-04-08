@@ -200,7 +200,6 @@ simulate_infections <- function(R,
 #' @param verbose Logical defaults to [interactive()]. If the `progressr`
 #' package is available, a progress bar will be shown.
 #' @inheritParams stan_opts
-#' @importFrom rstan extract sampling
 #' @importFrom purrr list_transpose map safely compact
 #' @importFrom data.table rbindlist as.data.table
 #' @importFrom lubridate days
