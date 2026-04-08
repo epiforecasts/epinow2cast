@@ -905,63 +905,6 @@ print.epinowfit <- function(x, ...) {
   print(summary(x))
 }
 
-#' Summarise results from estimate_secondary
-#'
-#' @description `r lifecycle::badge("stable")`
-#' Returns a summary of the fitted secondary model including posterior
-#' parameter estimates with credible intervals.
-#'
-#' @param object A fitted model object from `estimate_secondary()`
-#' @param type Character string indicating the type of summary to return.
-#'   Options are "compact" (default) which returns delay distribution
-#'   parameters and scaling factors, or "parameters" for all parameters
-#'   or a filtered set.
-#' @param params Character vector of parameter names to include. Only used
-#'   when `type = "parameters"`. If NULL (default), returns all parameters.
-#' @inheritParams calc_summary_measures
-#' @param ... Additional arguments (currently unused)
-#'
-#' @return A `<data.table>` with summary statistics (mean, sd, median,
-#'   credible intervals) for model parameters. When `type = "compact"`,
-#'   returns only key parameters (delay distribution parameters and scaling
-#'   factors). When `type = "parameters"`, returns all or filtered parameters.
-#' @importFrom rlang arg_match
-#' @method summary estimate_secondary
-#' @export
-summary.estimate_secondary <- function(object,
-                                       type = c("compact", "parameters"),
-                                       params = NULL,
-                                       CrIs = c(0.2, 0.5, 0.9), ...) {
-  type <- arg_match(type)
-
-  # Get all posterior samples
-  samples <- get_samples(object)
-
-  # Filter to non-time-varying parameters (delay_params and params)
-  # Time-varying parameters like secondary and sim_secondary have dates
-  param_samples <- samples[is.na(date)]
-
-  # Calculate summary statistics grouped by variable
-  out <- calc_summary_measures(
-    param_samples,
-    summarise_by = "variable",
-    order_by = "variable",
-    CrIs = CrIs
-  )
-
-  if (type == "compact") {
-    # Return only key parameters for a compact summary
-    # Filter to delay distribution and scaling parameters
-    key_patterns <- c("reporting\\[", "fraction_observed")
-    out <- out[grepl(paste(key_patterns, collapse = "|"), variable)]
-  } else if (type == "parameters" && !is.null(params)) {
-    # Optional filtering by parameter name
-    out <- out[variable %in% params]
-  }
-
-  out[]
-}
-
 #' Summarise results from estimate_truncation
 #'
 #' @description `r lifecycle::badge("stable")`
@@ -1021,4 +964,76 @@ print.summary.estimate_truncation <- function(x, ...) {
   # Print as regular data.table
   print(as.data.table(x), ...)
   invisible(x)
+}
+
+#' Create summary output from infection estimation objects
+#'
+#' @description `r lifecycle::badge("stable")`
+#'
+#' This function creates summary output from infection estimation objects.
+#' It is used internally by [summary.estimate_infections()] to provide a
+#' consistent summary interface.
+#'
+#' @param object An infection estimation object from
+#'   [estimate_infections()].
+#'
+#' @param type A character vector of data types to return. Defaults to
+#'   "snapshot" but also supports "parameters". "snapshot" returns
+#'   a summary at a given date (by default the latest date informed by data).
+#'   "parameters" returns summarised parameter estimates that can be further
+#'   filtered using `params` to show just the parameters of interest and date.
+#'
+#' @inheritParams summary.estimate_infections
+#'
+#' @param CrIs Numeric vector of credible intervals to calculate. Defaults
+#'   to c(0.2, 0.5, 0.9).
+#'
+#' @param ... Additional arguments passed to [report_summary()].
+#'
+#' @return A `<data.frame>` of summary output, either a snapshot summary
+#'   (via [report_summary()]) or parameter summaries (via
+#'   [calc_summary_measures()]).
+#'
+#' @importFrom rlang arg_match
+#' @seealso [summary.estimate_infections()]
+#'   [report_summary()] [calc_summary_measures()]
+#' @keywords internal
+create_infection_summary <- function(object,
+                                     type = c("snapshot", "parameters"),
+                                     target_date = NULL, params = NULL,
+                                     CrIs = c(0.2, 0.5, 0.9), ...) {
+  type <- arg_match(type)
+
+  samples <- get_samples(object)
+
+  summarised <- calc_summary_measures(
+    samples,
+    summarise_by = c("date", "variable", "strat", "type"),
+    order_by = c("variable", "date"),
+    CrIs = CrIs
+  )
+
+  if (type == "snapshot") {
+    if (is.null(target_date)) {
+      target_date <- max(object$observations$date)
+    } else {
+      target_date <- as.Date(target_date)
+    }
+    out <- report_summary(
+      summarised_estimates = summarised[date == target_date],
+      rt_samples = samples[variable == "R"][
+        date == target_date, .(sample, value)
+      ],
+      ...
+    )
+  } else if (type == "parameters") {
+    out <- summarised
+    if (!is.null(target_date)) {
+      out <- out[date == as.Date(target_date)]
+    }
+    if (!is.null(params)) {
+      out <- out[variable %in% params]
+    }
+  }
+  out[]
 }
