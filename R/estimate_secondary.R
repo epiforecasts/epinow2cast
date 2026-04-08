@@ -140,7 +140,18 @@
 #'
 #' options(old_opts)
 #' }
-estimate_secondary <- function(data,
+estimate_secondary <- function(data, ...) {
+  lifecycle::deprecate_stop(
+    "2.0.0", "estimate_secondary()",
+    details = paste(
+      "This function is no longer supported since EpiNow2 v2.0.0.",
+      "Consider using the epinowcast package directly for modelling",
+      "relationships between primary and secondary observations."
+    )
+  )
+}
+
+estimate_secondary_old <- function(data,
                                secondary = secondary_opts(),
                                delays = delay_opts(
                                  LogNormal(
@@ -595,7 +606,17 @@ convolve_and_scale <- function(data, type = c("incidence", "prevalence"),
 #' @inheritParams stan_opts
 #' @seealso [estimate_secondary()]
 #' @export
-forecast_secondary <- function(estimate,
+forecast_secondary <- function(estimate, ...) {
+  lifecycle::deprecate_stop(
+    "2.0.0", "forecast_secondary()",
+    details = paste(
+      "This function is no longer supported since EpiNow2 v2.0.0.",
+      "Consider using the epinowcast package directly."
+    )
+  )
+}
+
+forecast_secondary_old <- function(estimate,
                                primary,
                                primary_variable = "reported_cases",
                                model = NULL,

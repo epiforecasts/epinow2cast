@@ -317,7 +317,18 @@ simulate_infections <- function(R,
 #'
 #' options(old_opts)
 #' }
-forecast_infections <- function(estimates,
+forecast_infections <- function(estimates, ...) {
+  lifecycle::deprecate_stop(
+    "2.0.0", "forecast_infections()",
+    details = paste(
+      "This function is no longer supported since EpiNow2 v2.0.0.",
+      "Use estimate_infections() with forecast = forecast_opts(horizon = N)",
+      "to produce forecasts directly."
+    )
+  )
+}
+
+forecast_infections_old <- function(estimates,
                                 R = NULL,
                                 model = NULL,
                                 samples = NULL,

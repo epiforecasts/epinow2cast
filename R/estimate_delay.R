@@ -46,7 +46,17 @@
 #'   cores = ifelse(interactive(), 4, 1), verbose = TRUE
 #' )
 #' }
-dist_fit <- function(values = NULL, samples = 1000, cores = 1,
+dist_fit <- function(values = NULL, ...) {
+  lifecycle::deprecate_stop(
+    "2.0.0", "dist_fit()",
+    details = paste(
+      "This function is no longer supported since EpiNow2 v2.0.0.",
+      "Consider using the fitdistrplus or primarycensored packages instead."
+    )
+  )
+}
+
+dist_fit_old <- function(values = NULL, samples = 1000, cores = 1,
                      chains = 2, dist = "exp", verbose = FALSE,
                      backend = "rstan") {
   # model parameters
@@ -160,7 +170,17 @@ dist_fit <- function(values = NULL, samples = 1000, cores = 1,
 #' )
 #' out
 #' }
-bootstrapped_dist_fit <- function(values, dist = "lognormal",
+bootstrapped_dist_fit <- function(values, ...) {
+  lifecycle::deprecate_stop(
+    "2.0.0", "bootstrapped_dist_fit()",
+    details = paste(
+      "This function is no longer supported since EpiNow2 v2.0.0.",
+      "Consider using the fitdistrplus or primarycensored packages instead."
+    )
+  )
+}
+
+bootstrapped_dist_fit_old <- function(values, dist = "lognormal",
                                   samples = 2000, bootstraps = 10,
                                   bootstrap_samples = 250, max_value,
                                   verbose = FALSE) {

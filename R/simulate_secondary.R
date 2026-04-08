@@ -32,7 +32,17 @@
 #'   obs = obs_opts(family = "poisson")
 #' )
 #' }
-simulate_secondary <- function(primary,
+simulate_secondary <- function(primary, ...) {
+  lifecycle::deprecate_stop(
+    "2.0.0", "simulate_secondary()",
+    details = paste(
+      "This function is no longer supported since EpiNow2 v2.0.0.",
+      "Consider using the epinowcast package directly."
+    )
+  )
+}
+
+simulate_secondary_old <- function(primary,
                                day_of_week_effect = NULL,
                                secondary = secondary_opts(),
                                delays = delay_opts(),
