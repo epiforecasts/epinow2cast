@@ -133,9 +133,15 @@ rt_to_enw_formula <- function(rt) {
 #'
 #' @keywords internal
 obs_to_enw <- function(obs) {
-  family <- obs$family
+  # Observation formula for day-of-week effects
+  if (isTRUE(obs$week_effect)) {
+    observation_formula <- ~ 1 + day_of_week
+  } else {
+    observation_formula <- ~1
+  }
   list(
-    family = family
+    family = obs$family,
+    observation_formula = observation_formula
   )
 }
 
@@ -175,10 +181,12 @@ run_epinowcast <- function(data, generation_time, delays, rt, obs,
   pobs <- incidence_to_enw(data, horizon = horizon)
 
   # Build epinowcast modules
+  obs_args <- obs_to_enw(obs)
   expectation_module <- epinowcast::enw_expectation(
     r = rt_to_enw_formula(rt),
     generation_time = gt_pmf,
     latent_reporting_delay = delay_pmf,
+    observation = obs_args$observation_formula,
     data = pobs
   )
   # Tighten the prior on the growth rate random effect SD to reduce
@@ -195,7 +203,6 @@ run_epinowcast <- function(data, generation_time, delays, rt, obs,
 
   report_module <- epinowcast::enw_report(~0, data = pobs)
 
-  obs_args <- obs_to_enw(obs)
   obs_module_args <- list(
     data = pobs,
     family = obs_args$family
