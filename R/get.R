@@ -256,13 +256,7 @@ get_samples <- function(object, ...) {
 #' @rdname get_samples
 #' @export
 get_samples.estimate_infections <- function(object, ...) {
-  raw_samples <- extract_samples(object$fit)
-
-  format_samples_with_dates(
-    raw_samples = raw_samples,
-    args = object$args,
-    observations = object$observations
-  )
+  extract_enw_samples(object)
 }
 
 #' @rdname get_samples
