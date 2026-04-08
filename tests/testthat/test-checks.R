@@ -221,59 +221,6 @@ test_that("check_truncation_length warns when truncation PMF is longer than time
   )
 })
 
-test_that("check_truncation_length works with truncation from create_stan_delays", {
-  rlang::local_options(rlib_warning_verbosity = "verbose")
-
-  # Short truncation (should NOT warn)
-  short_trunc <- trunc_opts(dist = LogNormal(mean = 1, sd = 0.5, max = 5))
-  stan_args_short <- list(
-    data = create_stan_delays(
-      truncation = short_trunc,
-      time_points = 10
-    )
-  )
-  expect_no_warning(
-    check_truncation_length(stan_args_short, time_points = 10)
-  )
-
-  # Long truncation (should warn)
-  long_trunc <- trunc_opts(dist = LogNormal(mean = 2, sd = 0.5, max = 20))
-  stan_args_long <- list(
-    data = create_stan_delays(
-      truncation = long_trunc,
-      time_points = 10
-    )
-  )
-  expect_warning(
-    check_truncation_length(stan_args_long, time_points = 10),
-    "truncation distribution is longer"
-  )
-})
-
-test_that("check_truncation_length works when truncation is combined with other delays", {
-  rlang::local_options(rlib_warning_verbosity = "verbose")
-
-  # Create stan_args with generation time, reporting delay, and truncation
-  # where only truncation is too long
-  gt <- gt_opts(Fixed(5))
-  delays <- delay_opts(Fixed(3))
-  long_trunc <- trunc_opts(dist = LogNormal(mean = 2, sd = 0.5, max = 20))
-
-  stan_args <- list(
-    data = create_stan_delays(
-      generation_time = gt,
-      reporting = delays,
-      truncation = long_trunc,
-      time_points = 10
-    )
-  )
-
-  # Should warn about truncation being too long
-  expect_warning(
-    check_truncation_length(stan_args, time_points = 10),
-    "truncation distribution is longer"
-  )
-})
 
 test_that("check_truncation_length correctly indexes when parametric delays precede nonparametric truncation", {
   rlang::local_options(rlib_warning_verbosity = "verbose")

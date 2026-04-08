@@ -26,11 +26,11 @@ test_that("regional_epinow produces expected output when run with default settin
       data = cases,
       generation_time = generation_time_opts(example_generation_time),
       delays = delay_opts(example_reporting_delay),
-      rt = rt_opts(rw = 10), gp = NULL,
+      rt = rt_opts(rw = 10),
       stan = stan_opts(
-        samples = 25, warmup = 25,
+        samples = 100, warmup = 100,
         cores = 1, chains = 2,
-        control = list(adapt_delta = 0.8)
+        backend = "cmdstanr"
       ),
       logs = NULL, verbose = FALSE
     )
@@ -93,9 +93,7 @@ test_that("regional_epinow runs without error when given a very short timeout", 
 
 test_that("regional_epinow produces expected output when run with region specific settings", {
   skip_integration()
-  gp <- opts_list(gp_opts(), cases)
-  gp <- modifyList(gp, list(realland = NULL), keep.null = TRUE)
-  rt <- opts_list(rt_opts(), cases, realland = rt_opts(rw = 7))
+  rt <- opts_list(rt_opts(rw = 7), cases, realland = rt_opts(rw = 1))
   delays <- opts_list(
     delay_opts(), cases, realland = delay_opts(example_reporting_delay)
   )
@@ -104,11 +102,11 @@ test_that("regional_epinow produces expected output when run with region specifi
       data = cases,
       generation_time = generation_time_opts(example_generation_time),
       delays = delays,
-      rt = rt, gp = gp,
+      rt = rt,
       stan = stan_opts(
         samples = 100, warmup = 100,
         cores = 1, chains = 2,
-        control = list(adapt_delta = 0.8)
+        backend = "cmdstanr"
       ),
       logs = NULL, verbose = FALSE
     )
