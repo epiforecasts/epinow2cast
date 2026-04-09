@@ -207,52 +207,127 @@ estimate_truncation <- function(data,
                                 verbose = TRUE,
                                 ...) {
   # Validate inputs
-  walk(data, check_reports_valid, model = "estimate_infections")
+  purrr::walk(data, check_reports_valid, model = "estimate_infections")
   assert_class(truncation, "dist_spec")
   assert_numeric(CrIs, lower = 0, upper = 1)
-  assert_logical(filter_leading_zeros)
-  assert_numeric(zero_threshold, lower = 0)
   assert_logical(verbose)
 
-  # Prepare observation matrix for Stan
-  obs_prep <- prepare_truncation_obs(data, trunc_max = max(truncation))
-  stan_data <- list(
-    obs = obs_prep$obs,
-    obs_dist = obs_prep$obs_dist,
-    t = obs_prep$t,
-    obs_sets = obs_prep$obs_sets
+  max_delay <- max(truncation)
+
+  # Convert list of snapshots to epinowcast reporting triangle format
+  enw_obs <- snapshots_to_reporting_triangle(data)
+
+  # Preprocess for epinowcast
+  pobs <- epinowcast::enw_preprocess_data(enw_obs, max_delay = max_delay)
+
+  # No expectation model — just estimate the delay
+  expectation_module <- epinowcast::enw_expectation(
+    r = ~0,
+    data = pobs
   )
 
-  stan_data <- c(stan_data, create_stan_delays(
-    truncation = truncation,
-    time_points = stan_data$t
-  ))
-
-  # initial conditions
-  init_fn <- function() {
-    c(create_delay_inits(stan_data), list(
-      dispersion = abs(rnorm(1, 0, 1)),
-      sigma = abs(rnorm(1, 0, 1))
-    ))
-  }
-  stan_args <- create_stan_args(
-    stan = stan, data = stan_data, init = init_fn, model = "estimate_truncation"
+  # Parametric reference delay model (the truncation distribution)
+  reference_module <- epinowcast::enw_reference(
+    parametric = ~1,
+    distribution = "lognormal",
+    data = pobs
   )
 
-  # Warn if truncation distribution is longer than observed time
-  check_truncation_length(stan_args, time_points = stan_data$t)
+  report_module <- epinowcast::enw_report(~0, data = pobs)
+  obs_module <- epinowcast::enw_obs(data = pobs, family = "negbin")
 
-  # fit
-  fit <- fit_model(stan_args, id = "estimate_truncation")
+  chains <- stan$chains %||% 4L
+  samples <- stan$samples %||% 2000L
+  warmup <- stan$warmup %||% 1000L
+  fit_opts <- epinowcast::enw_fit_opts(
+    sampler = epinowcast::enw_sample,
+    chains = chains,
+    iter_sampling = samples,
+    iter_warmup = warmup,
+    pp = TRUE,
+    show_messages = verbose
+  )
+
+  model <- epinowcast::enw_model(threads = TRUE)
+
+  enw_fit <- epinowcast::epinowcast(
+    data = pobs,
+    expectation = expectation_module,
+    reference = reference_module,
+    report = report_module,
+    obs = obs_module,
+    fit = fit_opts,
+    model = model
+  )
 
   out <- list(
     observations = data,
-    args = stan_data,
-    fit = fit
+    enw_fit = enw_fit,
+    fit = enw_fit$fit[[1]],
+    args = list(
+      enw_data = enw_fit$data[[1]],
+      max_delay = max_delay,
+      truncation = truncation
+    )
   )
 
   class(out) <- c("estimate_truncation", "epinowfit", class(out))
   out
+}
+
+#' Convert observation snapshots to a reporting triangle
+#'
+#' @description Converts a list of data snapshots (as used by
+#'   [estimate_truncation()]) into the reporting triangle format
+#'   required by [epinowcast::enw_preprocess_data()].
+#'
+#' @param data A list of `<data.frame>`s each containing `date` and
+#'   `confirm` columns.
+#'
+#' @return A `data.table` with columns `reference_date`, `report_date`,
+#'   and `confirm` (cumulative).
+#'
+#' @keywords internal
+snapshots_to_reporting_triangle <- function(data) {
+  snapshots <- purrr::map(data, data.table::as.data.table)
+
+  # Each snapshot represents data as seen on a particular report date
+  # The report date is the max date in each snapshot
+  report_dates <- purrr::map(snapshots, function(x) max(x$date))
+
+  obs_list <- purrr::map2(snapshots, report_dates, function(snap, rd) {
+    dt <- data.table::copy(snap)
+    data.table::setnames(dt, "date", "reference_date")
+    dt[, report_date := rd]
+    dt[, .(reference_date, report_date, confirm)]
+  })
+
+  obs <- data.table::rbindlist(obs_list)
+  data.table::setorderv(obs, c("reference_date", "report_date"))
+
+  # Complete the reporting triangle: fill daily report dates between
+  # snapshots using last observation carried forward
+  all_ref_dates <- sort(unique(obs$reference_date))
+  min_report <- min(obs$report_date)
+  max_report <- max(obs$report_date)
+  all_report_dates <- seq.Date(min_report, max_report, by = "day")
+
+  grid <- data.table::CJ(
+    reference_date = all_ref_dates,
+    report_date = all_report_dates
+  )
+  # Only keep report_date >= reference_date
+  grid <- grid[report_date >= reference_date]
+
+  obs <- merge(grid, obs, by = c("reference_date", "report_date"), all.x = TRUE)
+  data.table::setorderv(obs, c("reference_date", "report_date"))
+  # Fill forward: for each reference_date, carry forward the last known count
+  obs[, confirm := data.table::nafill(confirm, type = "locf"),
+    by = reference_date]
+  # Fill remaining NAs with 0 (dates before first snapshot)
+  obs[is.na(confirm), confirm := 0L]
+
+  obs
 }
 
 #' Plot method for estimate_truncation

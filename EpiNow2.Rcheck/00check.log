@@ -1,0 +1,20 @@
+* using log directory ‘/home/sebfunk/code/epinow2cast/EpiNow2.Rcheck’
+* using R version 4.5.1 (2025-06-13)
+* using platform: x86_64-pc-linux-gnu
+* R was compiled by
+    gcc (Ubuntu 14.3.0-1ubuntu1) 14.3.0
+    GNU Fortran (Ubuntu 14.3.0-1ubuntu1) 14.3.0
+* running under: Ubuntu 25.10
+* using session charset: UTF-8
+* using options ‘--no-examples --no-tests --no-manual --no-vignettes’
+* checking for file ‘EpiNow2/DESCRIPTION’ ... OK
+* checking extension type ... Package
+* this is package ‘EpiNow2’ version ‘2.0.0.9000’
+* package encoding: UTF-8
+* checking package namespace information ... OK
+* checking package dependencies ... INFO
+Packages suggested but not available for checking:
+  'future', 'future.apply', 'parallelly', 'progressr', 'spelling'
+* checking if this is a source package ... OK
+* checking if there is a namespace ... OK
+* checking for executable files ...

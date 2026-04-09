@@ -128,7 +128,6 @@ Imports:
     purrr,
     R.utils (>= 2.0.0),
     rlang (>= 0.4.7),
-    runner,
     scales,
     stats,
     truncnorm,
