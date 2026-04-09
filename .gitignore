@@ -50,3 +50,5 @@ inst/dev/benchmark-results.md
 
 # Claude
 .claude/*
+EpiNow2.Rcheck/
+*.tar.gz
