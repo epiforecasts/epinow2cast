@@ -667,45 +667,16 @@ stan_sampling_opts <- function(cores = getOption("mc.cores", 1L),
                                seed = as.integer(runif(1, 1, 1e8)),
                                future = FALSE,
                                max_execution_time = Inf,
-                               backend = c("rstan", "cmdstanr"),
+                               backend = "cmdstanr",
                                ...) {
   dot_args <- list(...)
-  backend <- arg_match(backend)
   opts <- list(
     chains = chains,
+    samples = samples,
+    warmup = warmup,
     save_warmup = save_warmup,
-    seed = seed,
-    future = future,
-    max_execution_time = max_execution_time
+    seed = seed
   )
-  control_def <- list(adapt_delta = 0.9, max_treedepth = 12)
-  control_def <- modifyList(control_def, control)
-  if (any(c("iter", "iter_sampling") %in% names(dot_args))) {
-    cli_warn(
-      c(
-        "!" = "Number of samples must be specified using the {.var samples}
-      and {.var warmup} arguments rather than {.var iter} or
-      {.var iter_sampliing}.",
-        "i" = "Supplied {.var iter} or {.var iter_sampliing} will be ignored."
-      )
-    )
-  }
-  dot_args$iter <- NULL
-  dot_args$iter_sampling <- NULL
-  if (backend == "rstan") {
-    opts <- c(opts, list(
-      cores = cores,
-      warmup = warmup,
-      control = control_def,
-      iter = ceiling(samples / opts$chains) + warmup
-    ))
-  } else if (backend == "cmdstanr") {
-    opts <- c(opts, list(
-      parallel_chains = cores,
-      iter_warmup = warmup,
-      iter_sampling = ceiling(samples / opts$chains)
-    ), control_def)
-  }
   c(opts, dot_args)
 }
 
@@ -844,68 +815,14 @@ stan_pathfinder_opts <- function(backend = "cmdstanr",
 #'
 #' # using vb
 #' stan_opts(method = "vb")
-stan_opts <- function(object = NULL,
-                      samples = 2000,
-                      method = c("sampling", "vb", "laplace", "pathfinder"),
-                      backend = c("rstan", "cmdstanr"),
+stan_opts <- function(samples = 2000,
+                      warmup = 1000,
+                      chains = 4,
                       return_fit = TRUE,
                       ...) {
-  method <- arg_match(method)
-  backend_passed <- !missing(backend)
-  backend <- arg_match(backend)
-  if (backend == "cmdstanr" && !requireNamespace("cmdstanr", quietly = TRUE)) {
-    cli_abort(
-      c(
-        "x" = "The {col_blue('cmdstanr')} R package is not installed.",
-        "i" = "Install it from {.url https://github.com/stan-dev/cmdstanr}
-        to use the {col_blue('cmdstanr')} backend."
-      )
-    )
-  }
-  opts <- list()
-  if (!is.null(object)) {
-    if (backend_passed) {
-      cli_warn(
-        c(
-          "!" = "{.var backend} option will be ignored as a stan model
-        object has been passed."
-        )
-      )
-    }
-    if (inherits(object, "stanmodel")) {
-      backend <- "rstan"
-    } else if (inherits(object, "CmdStanModel")) {
-      backend <- "cmdstanr"
-    } else {
-      cli_abort(
-        c(
-          "!" = "{.var object} must be a stan model object."
-        )
-      )
-    }
-  } else {
-    backend <- arg_match(backend, values = c("rstan", "cmdstanr"))
-    opts <- c(opts, list(backend = backend))
-  }
-  opts <- c(opts, list(
-    object = object,
-    method = method
-  ))
-  opts <- switch(method,
-    sampling = c(
-      opts, stan_sampling_opts(samples = samples, backend = backend, ...)
-    ),
-    vb = c(
-      opts, stan_vb_opts(samples = samples, ...)
-    ),
-    laplace = c(
-      opts, stan_laplace_opts(backend = backend, ...)
-    ),
-    pathfinder = c(
-      opts, stan_pathfinder_opts(samples = samples, backend = backend, ...)
-    )
+  opts <- stan_sampling_opts(
+    samples = samples, warmup = warmup, chains = chains, ...
   )
-
   opts <- c(opts, list(return_fit = return_fit))
   attr(opts, "class") <- c("stan_opts", class(opts))
   opts

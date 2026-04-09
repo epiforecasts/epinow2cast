@@ -919,32 +919,18 @@ print.epinowfit <- function(x, ...) {
 #' @method summary estimate_truncation
 #' @export
 summary.estimate_truncation <- function(object, CrIs = c(0.2, 0.5, 0.9), ...) {
-  # Extract delay parameters directly from fit (avoids rbindlist warning)
-  raw_samples <- extract_samples(object$fit)
-  param_samples <- extract_delays(raw_samples, args = object$args)
+  # Extract delay parameters from epinowcast fit
+  samples <- get_samples(object)
 
-  # Calculate summary statistics
   out <- calc_summary_measures(
-    param_samples,
+    samples,
     summarise_by = "variable",
     order_by = "variable",
     CrIs = CrIs
   )
 
-  # Map generic parameter names to distribution-specific names
-  dist_idx <- object$args$delay_dist[1] + 1
-  dist_type <- dist_spec_distributions()[dist_idx]
-  param_names <- natural_params(dist_type)
-  idx <- suppressWarnings(
-    as.integer(gsub(".*\\[(\\d+)\\]", "\\1", out$variable))
-  )
-  if (anyNA(idx)) {
-    cli::cli_warn("Could not parse parameter indices from variable names")
-    return(out)
-  }
-  out[, variable := param_names[idx]]
-
   # Add distribution info as attribute
+  dist_type <- "lognormal"
   attr(out, "distribution") <- dist_type
   attr(out, "max") <- object$args$delay_max[1]
   class(out) <- c("summary.estimate_truncation", class(out))

@@ -395,8 +395,8 @@ set_dt_single_thread <- function() {
 #' @return A function that can be used to apply a function to a list
 #' @keywords internal
 #' @inheritParams stan_opts
-lapply_func <- function(..., backend = "rstan", future.opts = list()) {
-  if (requireNamespace("future.apply", quietly = TRUE) && backend == "rstan") {
+lapply_func <- function(..., future.opts = list()) {
+  if (requireNamespace("future.apply", quietly = TRUE)) {
     do.call(future.apply::future_lapply, c(list(...), future.opts))
   } else {
     lapply(...)

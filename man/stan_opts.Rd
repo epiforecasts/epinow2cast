@@ -4,21 +4,20 @@
 \alias{stan_opts}
 \title{Stan Options}
 \usage{
-stan_opts(
-  object = NULL,
-  samples = 2000,
-  method = c("sampling", "vb", "laplace", "pathfinder"),
-  backend = c("rstan", "cmdstanr"),
-  return_fit = TRUE,
-  ...
-)
+stan_opts(samples = 2000, warmup = 1000, chains = 4, return_fit = TRUE, ...)
 }
 \arguments{
+\item{samples}{Numeric, defaults to 2000. Number of posterior samples.}
+
+\item{return_fit}{Logical, defaults to TRUE. Should the fit stan model be
+returned.}
+
+\item{...}{Additional parameters to pass to underlying option functions,
+\code{\link[=stan_sampling_opts]{stan_sampling_opts()}} or \code{\link[=stan_vb_opts]{stan_vb_opts()}}, depending on the method}
+
 \item{object}{Stan model object. By default uses the compiled package
 default if using the "rstan" backend, and the default model obtained using
 \code{\link[=epinow2_cmdstan_model]{epinow2_cmdstan_model()}} if using the "cmdstanr" backend.}
-
-\item{samples}{Numeric, defaults to 2000. Number of posterior samples.}
 
 \item{method}{A character string, defaulting to sampling. Currently supports
 MCMC sampling ("sampling") or approximate posterior sampling via
@@ -28,12 +27,6 @@ laplace algorithm ("laplace") or pathfinder ("pathfinder").}
 
 \item{backend}{Character string indicating the backend to use for fitting
 stan models. Supported arguments are "rstan" (default) or "cmdstanr".}
-
-\item{return_fit}{Logical, defaults to TRUE. Should the fit stan model be
-returned.}
-
-\item{...}{Additional parameters to pass to underlying option functions,
-\code{\link[=stan_sampling_opts]{stan_sampling_opts()}} or \code{\link[=stan_vb_opts]{stan_vb_opts()}}, depending on the method}
 }
 \value{
 A \verb{<stan_opts>} object of arguments to pass to the appropriate

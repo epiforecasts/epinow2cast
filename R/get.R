@@ -276,11 +276,35 @@ get_samples.epinow <- function(object, ...) {
 #' @rdname get_samples
 #' @export
 get_samples.estimate_truncation <- function(object, ...) {
-  raw_samples <- extract_samples(object$fit)
-  # extract_delays returns data.table with variable column
+  # Extract delay distribution parameters from epinowcast fit
+  fit <- object$fit
+  out <- list()
 
-  samples <- extract_delays(raw_samples, args = object$args)
-  samples[]
+  # Reference delay mean and sd
+  tryCatch({
+    mean_draws <- fit$draws(
+      variables = "refp_mean", format = "draws_matrix"
+    )
+    out$refp_mean <- enw_draws_to_dt(
+      mean_draws, "refp_mean", seq_len(ncol(mean_draws))
+    )
+  }, error = function(e) NULL)
+
+  tryCatch({
+    sd_draws <- fit$draws(
+      variables = "refp_sd", format = "draws_matrix"
+    )
+    out$refp_sd <- enw_draws_to_dt(
+      sd_draws, "refp_sd", seq_len(ncol(sd_draws))
+    )
+  }, error = function(e) NULL)
+
+  combined <- data.table::rbindlist(out, use.names = TRUE)
+  if (nrow(combined) > 0) {
+    combined[, strat := NA_character_]
+    combined[, type := NA_character_]
+  }
+  combined[]
 }
 
 #' Format sample predictions
@@ -409,126 +433,14 @@ get_predictions.estimate_infections <- function(
 #' @export
 get_predictions.estimate_truncation <- function(
     object,
-    format = c("summary", "sample", "quantile"),
+    format = c("summary"),
     CrIs = c(0.2, 0.5, 0.9),
     quantiles = c(0.05, 0.25, 0.5, 0.75, 0.95),
     ...) {
   format <- rlang::arg_match(format)
 
-  # Process input observations to get dates
-  dirty_obs <- purrr::map(object$observations, data.table::as.data.table)
-  earliest_date <- max(
-    as.Date(
-      purrr::map_chr(dirty_obs, function(x) x[, as.character(min(date))])
-    )
-  )
-  dirty_obs <- purrr::map(dirty_obs, function(x) x[date >= earliest_date])
-  nrow_obs <- order(purrr::map_dbl(dirty_obs, nrow))
-  dirty_obs <- dirty_obs[nrow_obs]
-
-  obs_sets <- object$args$obs_sets
-  trunc_max <- object$args$delay_max[1]
-
-  if (format == "summary") {
-    # Extract reconstructed observations summary statistics
-    recon_obs <- extract_stan_param(object$fit, "recon_obs",
-      CrIs = CrIs,
-      var_names = TRUE
-    )
-    recon_obs <- recon_obs[, id := variable][, variable := NULL]
-
-    # Assign dataset index using modulo
-    recon_obs <- recon_obs[, dataset := seq_len(.N)][
-      ,
-      dataset := dataset %% obs_sets
-    ][
-      dataset == 0, dataset := obs_sets
-    ]
-
-    # Link predictions to dates
-    link_preds <- function(index) {
-      target_obs <- dirty_obs[[index]][, idx := .N - 0:(.N - 1)]
-      target_obs <- target_obs[idx < trunc_max]
-      estimates <- recon_obs[dataset == index][, c("id", "dataset") := NULL]
-      estimates <- estimates[, lapply(.SD, as.integer)]
-      estimates <- estimates[, idx := .N - 0:(.N - 1)]
-      if (!is.null(estimates$n_eff)) estimates[, "n_eff" := NULL]
-      if (!is.null(estimates$Rhat)) estimates[, "Rhat" := NULL]
-
-      result <- data.table::merge.data.table(
-        target_obs[, .(date, idx)],
-        estimates,
-        by = "idx", all.x = TRUE
-      )
-      result[, report_date := max(target_obs$date)]
-      result[order(date)][, idx := NULL]
-    }
-
-    predictions <- purrr::map(seq_len(obs_sets), link_preds)
-    data.table::rbindlist(predictions)
-  } else {
-    # Both "sample" and "quantile" need raw samples first
-    raw_samples <- extract_samples(object$fit, pars = "recon_obs")
-    recon_samples <- data.table::as.data.table(raw_samples$recon_obs)
-    recon_samples <- data.table::melt(recon_samples,
-      measure.vars = seq_len(ncol(recon_samples)),
-      variable.name = "obs_idx",
-      value.name = "predicted"
-    )
-    recon_samples[, obs_idx := as.integer(obs_idx)]
-    recon_samples[, sample := seq_len(.N), by = obs_idx]
-    recon_samples[, dataset := ((obs_idx - 1) %% obs_sets) + 1]
-
-    # Link samples to dates
-    link_samples <- function(index) {
-      target_obs <- dirty_obs[[index]][, idx := .N - 0:(.N - 1)]
-      target_obs <- target_obs[idx < trunc_max]
-      target_obs[, obs_idx := seq_len(.N)]
-
-      samples_subset <- recon_samples[dataset == index]
-      result <- data.table::merge.data.table(
-        target_obs[, .(date, obs_idx)],
-        samples_subset[, .(obs_idx, sample, predicted)],
-        by = "obs_idx"
-      )[, obs_idx := NULL]
-
-      # Add forecast metadata
-      forecast_date <- max(target_obs$date, na.rm = TRUE)
-      result[, forecast_date := forecast_date]
-      result[, horizon := as.numeric(date - forecast_date)]
-      result[, dataset := index]
-
-      result
-    }
-
-    predictions <- purrr::map(seq_len(obs_sets), link_samples)
-    predictions <- data.table::rbindlist(predictions)
-
-    if (format == "sample") {
-      # Reorder columns for sample format
-      data.table::setcolorder(
-        predictions,
-        c("dataset", "forecast_date", "date", "horizon", "sample", "predicted")
-      )
-    } else {
-      # format == "quantile": aggregate to quantiles
-      predictions <- predictions[
-        ,
-        .(predicted = quantile(predicted, probs = quantiles)),
-        by = .(dataset, forecast_date, date, horizon)
-      ]
-      predictions[
-        , quantile_level := rep(quantiles, .N / length(quantiles))
-      ]
-      data.table::setcolorder(
-        predictions,
-        c("dataset", "forecast_date", "date", "horizon",
-          "quantile_level", "predicted")
-      )
-    }
-
-    predictions[]
-  }
+  # Use epinowcast's nowcast summary
+  summary(object$enw_fit, type = "nowcast")
 }
 
 

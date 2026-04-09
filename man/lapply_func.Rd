@@ -4,14 +4,11 @@
 \alias{lapply_func}
 \title{Choose a parallel or sequential apply function}
 \usage{
-lapply_func(..., backend = "rstan", future.opts = list())
+lapply_func(..., future.opts = list())
 }
 \arguments{
 \item{...}{Additional parameters to pass to underlying option functions,
 \code{\link[=stan_sampling_opts]{stan_sampling_opts()}} or \code{\link[=stan_vb_opts]{stan_vb_opts()}}, depending on the method}
-
-\item{backend}{Character string indicating the backend to use for fitting
-stan models. Supported arguments are "rstan" (default) or "cmdstanr".}
 }
 \value{
 A function that can be used to apply a function to a list

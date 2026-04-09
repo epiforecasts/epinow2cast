@@ -123,7 +123,6 @@ Imports:
     lubridate,
     methods,
     patchwork,
-    posterior,
     primarycensored,
     purrr,
     R.utils (>= 2.0.0),
