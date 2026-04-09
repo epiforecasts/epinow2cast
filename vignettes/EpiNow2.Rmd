@@ -26,20 +26,8 @@ library(EpiNow2)
 
 ### Reporting delays, incubation period and generation time
 
-Distributions can be supplied in two ways. First, one can supply delay data to `estimate_delay()`, where a subsampled bootstrapped lognormal will be fit to account for uncertainty in the observed data without being biased by changes in incidence (see `?EpiNow2::estimate_delay()`).
+Delay distributions can be specified using the distribution functions such as `Gamma` or `LogNormal`. An arbitrary number of delay distributions are supported in `dist_spec()` with a common use case being an incubation period followed by a reporting delay. For more information on specifying distributions see (see `?EpiNow2::Distributions`).
 
-Second, one can specify predetermined delays with uncertainty using the distribution functions such as `Gamma` or `Lognormal`. An arbitrary number of delay distributions are supported in `dist_spec()` with a common use case being an incubation period followed by a reporting delay. For more information on specifying distributions see (see `?EpiNow2::Distributions`).
-
-For example if data on the delay between onset and infection was available we could fit a distribution to it, using `estimate_delay()`, with appropriate uncertainty as follows (note this is a synthetic example),
-
-``` r
-reporting_delay <- estimate_delay(
-  rlnorm(1000, log(2), 1),
-  max_value = 14, bootstraps = 1
-)
-```
-
-If data was not available we could instead specify an informed estimate of the likely delay using the distribution functions `Gamma` or `LogNormal`. 
 To demonstrate, we choose a lognormal distribution with mean 2, standard deviation 1 and a maximum of 10. *This is just an example and unlikely to apply in any particular use case*.
 
 
@@ -131,21 +119,89 @@ estimates <- epinow(
   data = reported_cases,
   generation_time = gt_opts(example_generation_time),
   delays = delay_opts(example_incubation_period + reporting_delay),
-  rt = rt_opts(prior = LogNormal(mean = 2, sd = 0.2)),
+  rt = rt_opts(prior = LogNormal(mean = 2, sd = 0.2), rw = 7),
   stan = stan_opts(cores = 4),
   verbose = interactive()
 )
+#> Path [1] :Initial log joint density = -35798649.947630 
+#> Exception: Exception: Exception: neg_binomial_2_log_lpmf: Log location parameter[1] is inf, but must be finite! (in '/tmp/Rtmp7MjmHm/include_1/stan/functions/obs_lpmf.stan', line 35, column 4, included from 
+#> '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 13, column 0) (in '/tmp/Rtmp7MjmHm/include_1/stan/functions/delay_lpmf.stan', line 202, column 4, included from 
+#> '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 18, column 0) (in '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 427, column 6 to line 434, column 8) 
+#> Exception: Exception: Exception: neg_binomial_2_log_lpmf: Log location parameter[40] is inf, but must be finite! (in '/tmp/Rtmp7MjmHm/include_1/stan/functions/obs_lpmf.stan', line 35, column 4, included from 
+#> '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 13, column 0) (in '/tmp/Rtmp7MjmHm/include_1/stan/functions/delay_lpmf.stan', line 202, column 4, included from 
+#> '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 18, column 0) (in '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 427, column 6 to line 434, column 8) 
+#> Error evaluating model log probability: Non-finite function evaluation. 
+#> Error evaluating model log probability: Non-finite function evaluation. 
+#> Error evaluating model log probability: Non-finite function evaluation. 
+#> Error evaluating model log probability: Non-finite function evaluation.
+#> Path [1] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
+#>              99      -6.743e+02      7.496e-02   2.955e+00    1.000e+00  1.000e+00      9572 -7.396e+02 -8.300e+02                   
+#> Path [1] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
+#>             199      -6.740e+02      1.869e-03   9.311e-02    1.000e+00  1.000e+00     31145 -7.396e+02 -8.405e+02                   
+#> Path [1] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
+#>             234      -6.740e+02      8.429e-04   2.413e-02    1.000e+00  1.000e+00     41686 -7.396e+02 -9.857e+02                   
+#> Path [1] :Best Iter: [71] ELBO (-739.634647) evaluations: (41686) 
+#> Path [2] :Initial log joint density = -35798649.947630 
+#> Exception: Exception: Exception: neg_binomial_2_log_lpmf: Log location parameter[1] is inf, but must be finite! (in '/tmp/Rtmp7MjmHm/include_1/stan/functions/obs_lpmf.stan', line 35, column 4, included from 
+#> '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 13, column 0) (in '/tmp/Rtmp7MjmHm/include_1/stan/functions/delay_lpmf.stan', line 202, column 4, included from 
+#> '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 18, column 0) (in '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 427, column 6 to line 434, column 8) 
+#> Exception: Exception: Exception: neg_binomial_2_log_lpmf: Log location parameter[40] is inf, but must be finite! (in '/tmp/Rtmp7MjmHm/include_1/stan/functions/obs_lpmf.stan', line 35, column 4, included from 
+#> '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 13, column 0) (in '/tmp/Rtmp7MjmHm/include_1/stan/functions/delay_lpmf.stan', line 202, column 4, included from 
+#> '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 18, column 0) (in '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 427, column 6 to line 434, column 8) 
+#> Error evaluating model log probability: Non-finite function evaluation. 
+#> Error evaluating model log probability: Non-finite function evaluation. 
+#> Error evaluating model log probability: Non-finite function evaluation. 
+#> Error evaluating model log probability: Non-finite function evaluation. 
+#> Path [2] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
+#>              99      -6.743e+02      7.496e-02   2.955e+00    1.000e+00  1.000e+00      9572 -7.410e+02 -8.057e+02                   
+#> Path [2] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
+#>             199      -6.740e+02      1.869e-03   9.311e-02    1.000e+00  1.000e+00     31145 -7.410e+02 -8.643e+02                   
+#> Path [2] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
+#>             234      -6.740e+02      8.429e-04   2.413e-02    1.000e+00  1.000e+00     41686 -7.410e+02 -8.648e+02                   
+#> Path [2] :Best Iter: [71] ELBO (-740.969524) evaluations: (41686) 
+#> Path [3] :Initial log joint density = -35798649.947630 
+#> Exception: Exception: Exception: neg_binomial_2_log_lpmf: Log location parameter[1] is inf, but must be finite! (in '/tmp/Rtmp7MjmHm/include_1/stan/functions/obs_lpmf.stan', line 35, column 4, included from 
+#> '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 13, column 0) (in '/tmp/Rtmp7MjmHm/include_1/stan/functions/delay_lpmf.stan', line 202, column 4, included from 
+#> '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 18, column 0) (in '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 427, column 6 to line 434, column 8) 
+#> Exception: Exception: Exception: neg_binomial_2_log_lpmf: Log location parameter[40] is inf, but must be finite! (in '/tmp/Rtmp7MjmHm/include_1/stan/functions/obs_lpmf.stan', line 35, column 4, included from 
+#> '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 13, column 0) (in '/tmp/Rtmp7MjmHm/include_1/stan/functions/delay_lpmf.stan', line 202, column 4, included from 
+#> '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 18, column 0) (in '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 427, column 6 to line 434, column 8) 
+#> Error evaluating model log probability: Non-finite function evaluation. 
+#> Error evaluating model log probability: Non-finite function evaluation. 
+#> Error evaluating model log probability: Non-finite function evaluation. 
+#> Error evaluating model log probability: Non-finite function evaluation. 
+#> Path [3] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
+#>              99      -6.743e+02      7.496e-02   2.955e+00    1.000e+00  1.000e+00      9572 -7.438e+02 -8.051e+02                   
+#> Path [3] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
+#>             199      -6.740e+02      1.869e-03   9.311e-02    1.000e+00  1.000e+00     31145 -7.438e+02 -9.020e+02                   
+#> Path [3] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
+#>             234      -6.740e+02      8.429e-04   2.413e-02    1.000e+00  1.000e+00     41686 -7.438e+02 -9.532e+02                   
+#> Path [3] :Best Iter: [71] ELBO (-743.753709) evaluations: (41686) 
+#> Path [4] :Initial log joint density = -35798649.947630 
+#> Exception: Exception: Exception: neg_binomial_2_log_lpmf: Log location parameter[1] is inf, but must be finite! (in '/tmp/Rtmp7MjmHm/include_1/stan/functions/obs_lpmf.stan', line 35, column 4, included from 
+#> '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 13, column 0) (in '/tmp/Rtmp7MjmHm/include_1/stan/functions/delay_lpmf.stan', line 202, column 4, included from 
+#> '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 18, column 0) (in '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 427, column 6 to line 434, column 8) 
+#> Exception: Exception: Exception: neg_binomial_2_log_lpmf: Log location parameter[40] is inf, but must be finite! (in '/tmp/Rtmp7MjmHm/include_1/stan/functions/obs_lpmf.stan', line 35, column 4, included from 
+#> '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 13, column 0) (in '/tmp/Rtmp7MjmHm/include_1/stan/functions/delay_lpmf.stan', line 202, column 4, included from 
+#> '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 18, column 0) (in '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 427, column 6 to line 434, column 8) 
+#> Error evaluating model log probability: Non-finite function evaluation. 
+#> Error evaluating model log probability: Non-finite function evaluation. 
+#> Error evaluating model log probability: Non-finite function evaluation. 
+#> Error evaluating model log probability: Non-finite function evaluation. 
+#> Path [4] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
+#>              99      -6.743e+02      7.496e-02   2.955e+00    1.000e+00  1.000e+00      9572 -7.446e+02 -8.512e+02                   
+#> Path [4] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
+#>             199      -6.740e+02      1.869e-03   9.311e-02    1.000e+00  1.000e+00     31145 -7.364e+02 -8.601e+02                   
+#> Path [4] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
+#>             234      -6.740e+02      8.429e-04   2.413e-02    1.000e+00  1.000e+00     41686 -7.364e+02 -9.558e+02                   
+#> Path [4] :Best Iter: [108] ELBO (-736.368049) evaluations: (41686) 
+#> Pareto k value (2) is greater than 0.7. Importance resampling was not able to improve the approximation, which may indicate that the approximation itself is poor. 
+#> Finished in  1.8 seconds.
 names(estimates)
-#> [1] "fit"          "args"         "observations" "timing"
+#> [1] "fit"          "enw_fit"      "args"         "observations" "timing"
 ```
 
-The default model uses a Gaussian process to estimate time-varying transmission, which provides flexible estimates but can take several minutes to run. If speed is a priority, there are several alternatives:
-
-- Use a weekly random walk instead of the Gaussian process (`rt = rt_opts(..., rw = 7)` with `gp = NULL`), as shown in the `regional_epinow()` example below.
-- Use variational inference for fast but unreliable approximate results (`stan = stan_opts(method = "vb")`).
-- Reduce the accuracy of the Gaussian process approximation (see `?gp_opts`).
-
-For examples of different model configurations, see the [estimate_infections_options](estimate_infections_options.html) vignette.
+The default model uses a random walk prior to estimate the time-varying reproduction number. The `rw` parameter in `rt_opts()` controls the period of the random walk (e.g. `rw = 7` for weekly).
 
 Both summary measures and posterior samples are returned for all parameters in an easily explored format which can be accessed using `summary`. The default is to return a summary table of estimates for key parameters at the latest date partially supported by data. 
 
@@ -156,13 +212,13 @@ knitr::kable(summary(estimates))
 
 
 
-|measure                      |estimate                 |
-|:----------------------------|:------------------------|
-|New infections per day       |2236 (1364 -- 3747)      |
-|Expected change in reports   |Likely decreasing        |
-|Effective reproduction no.   |0.89 (0.71 -- 1.1)       |
-|Rate of growth               |-0.029 (-0.098 -- 0.037) |
-|Doubling/halving time (days) |-24 (19 -- -7.1)         |
+|measure                      |estimate                  |
+|:----------------------------|:-------------------------|
+|New infections per day       |231352 (157862 -- 340930) |
+|Expected change in reports   |Likely increasing         |
+|Effective reproduction no.   |1.1 (0.67 -- 1.7)         |
+|Rate of growth               |0.072 (-0.41 -- 0.5)      |
+|Doubling/halving time (days) |9.6 (1.4 -- -1.7)         |
 
 
 
@@ -171,22 +227,22 @@ Summarised parameter estimates can also easily be returned, either filtered for 
 
 ``` r
 head(summary(estimates, type = "parameters", params = "R"))
-#>          date variable strat     type   median     mean         sd lower_90
-#>        <Date>   <char> <int>   <char>    <num>    <num>      <num>    <num>
-#> 1: 2020-02-22        R    NA estimate 2.189648 2.196213 0.11336185 2.023501
-#> 2: 2020-02-23        R    NA estimate 2.153710 2.159198 0.10259863 1.998873
-#> 3: 2020-02-24        R    NA estimate 2.118107 2.120663 0.09411365 1.974120
-#> 4: 2020-02-25        R    NA estimate 2.078305 2.080785 0.08768269 1.941711
-#> 5: 2020-02-26        R    NA estimate 2.037962 2.039743 0.08296362 1.909825
-#> 6: 2020-02-27        R    NA estimate 1.995351 1.997715 0.07954817 1.874942
-#>    lower_50 lower_20 upper_20 upper_50 upper_90
-#>       <num>    <num>    <num>    <num>    <num>
-#> 1: 2.116083 2.163518 2.221263 2.267635 2.391763
-#> 2: 2.086574 2.128094 2.182408 2.224640 2.333380
-#> 3: 2.054704 2.092117 2.140637 2.180685 2.279482
-#> 4: 2.019448 2.055093 2.099769 2.136280 2.230685
-#> 5: 1.981584 2.015820 2.057302 2.089886 2.182033
-#> 6: 1.941424 1.975040 2.014929 2.046460 2.135327
+#>          date variable  strat     type   median     mean        sd  lower_90
+#>        <Date>   <char> <char>   <char>    <num>    <num>     <num>     <num>
+#> 1:       <NA>        R   <NA> estimate 1.072862 1.246797 0.8548342 0.4154477
+#> 2: 2020-02-22        R   <NA> estimate 1.000000 1.000000 0.0000000 1.0000000
+#> 3: 2020-02-23        R   <NA> estimate 1.000000 1.000000 0.0000000 1.0000000
+#> 4: 2020-02-24        R   <NA> estimate 1.000000 1.000000 0.0000000 1.0000000
+#> 5: 2020-02-25        R   <NA> estimate 1.000000 1.000000 0.0000000 1.0000000
+#> 6: 2020-02-26        R   <NA> estimate 1.000000 1.000000 0.0000000 1.0000000
+#>    lower_50  lower_20 upper_20 upper_50 upper_90
+#>       <num>     <num>    <num>    <num>    <num>
+#> 1: 0.779581 0.9602026 1.196732 1.457594 2.659534
+#> 2: 1.000000 1.0000000 1.000000 1.000000 1.000000
+#> 3: 1.000000 1.0000000 1.000000 1.000000 1.000000
+#> 4: 1.000000 1.0000000 1.000000 1.000000 1.000000
+#> 5: 1.000000 1.0000000 1.000000 1.000000 1.000000
+#> 6: 1.000000 1.0000000 1.000000 1.000000 1.000000
 ```
 
 Reported cases can be extracted using `get_predictions()` which returns summarised estimates by default.
@@ -194,22 +250,12 @@ Reported cases can be extracted using `get_predictions()` which returns summaris
 
 ``` r
 head(get_predictions(estimates))
-#>          date median     mean       sd lower_90 lower_50 lower_20 upper_20
-#>        <Date>  <num>    <num>    <num>    <num>    <num>    <num>    <num>
-#> 1: 2020-02-22     35  36.3825  9.99996       22    29.75       33       38
-#> 2: 2020-02-23     52  53.0555 13.09439       34    44.00       49       55
-#> 3: 2020-02-24     65  65.6955 15.56759       42    55.00       60       69
-#> 4: 2020-02-25     72  72.8700 16.93146       48    61.00       68       76
-#> 5: 2020-02-26     83  83.5495 18.01854       54    72.00       78       87
-#> 6: 2020-02-27    120 121.3125 25.71222       82   103.00      113      126
+#>          date median     mean      sd lower_90 lower_50 lower_20 upper_20
+#>        <Date>  <num>    <num>   <num>    <num>    <num>    <num>    <num>
+#> 1: 2020-02-22 201290 527423.3 2076391 30301.65 92907.75 150681.8 268463.2
 #>    upper_50 upper_90
 #>       <num>    <num>
-#> 1:       42       54
-#> 2:       61       77
-#> 3:       75       93
-#> 4:       83      104
-#> 5:       95      115
-#> 6:      137      167
+#> 1:   445041  1655620
 ```
 
 A range of plots are returned (with the single summary plot shown below). These plots can also be generated using the following `plot` method.
@@ -246,7 +292,7 @@ head(reported_cases)
 #> 6: 2020-02-27      78 testland
 ```
 
-Calling `regional_epinow()` runs the `epinow()` on each region in turn (or in parallel depending on the settings used). Here we switch to using a weekly random walk rather than the full Gaussian process model giving us piecewise constant estimates by week. We also assign "testland" a different ascertainment of 50%, using the `opts_list()` function, which is used to assign region-specific settings.
+Calling `regional_epinow()` runs the `epinow()` on each region in turn (or in parallel depending on the settings used). Here we also assign "testland" a different ascertainment of 50%, using the `opts_list()` function, which is used to assign region-specific settings.
 
 
 ``` r
@@ -262,10 +308,225 @@ estimates <- regional_epinow(
   delays = delay_opts(example_incubation_period + reporting_delay),
   rt = rt_opts(prior = LogNormal(mean = 2, sd = 0.2), rw = 7),
   obs = obs,
-  gp = NULL,
-  stan = stan_opts(cores = 4, warmup = 250, samples = 1000),
+  stan = stan_opts(cores = 4, warmup = 1000, samples = 1000),
   logs = NULL
 )
+#> Path [1] :Initial log joint density = -21954150.924858 
+#> Exception: Exception: Exception: neg_binomial_2_log_lpmf: Log location parameter[1] is inf, but must be finite! (in '/tmp/Rtmp7MjmHm/include_1/stan/functions/obs_lpmf.stan', line 35, column 4, included from 
+#> '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 13, column 0) (in '/tmp/Rtmp7MjmHm/include_1/stan/functions/delay_lpmf.stan', line 202, column 4, included from 
+#> '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 18, column 0) (in '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 427, column 6 to line 434, column 8) 
+#> Exception: Exception: Exception: neg_binomial_2_log_lpmf: Log location parameter[8] is inf, but must be finite! (in '/tmp/Rtmp7MjmHm/include_1/stan/functions/obs_lpmf.stan', line 35, column 4, included from 
+#> '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 13, column 0) (in '/tmp/Rtmp7MjmHm/include_1/stan/functions/delay_lpmf.stan', line 202, column 4, included from 
+#> '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 18, column 0) (in '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 427, column 6 to line 434, column 8) 
+#> Exception: Exception: Exception: neg_binomial_2_log_lpmf: Log location parameter[8] is inf, but must be finite! (in '/tmp/Rtmp7MjmHm/include_1/stan/functions/obs_lpmf.stan', line 35, column 4, included from 
+#> '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 13, column 0) (in '/tmp/Rtmp7MjmHm/include_1/stan/functions/delay_lpmf.stan', line 202, column 4, included from 
+#> '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 18, column 0) (in '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 427, column 6 to line 434, column 8) 
+#> Exception: Exception: Exception: neg_binomial_2_log_lpmf: Log location parameter[29] is inf, but must be finite! (in '/tmp/Rtmp7MjmHm/include_1/stan/functions/obs_lpmf.stan', line 35, column 4, included from 
+#> '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 13, column 0) (in '/tmp/Rtmp7MjmHm/include_1/stan/functions/delay_lpmf.stan', line 202, column 4, included from 
+#> '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 18, column 0) (in '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 427, column 6 to line 434, column 8) 
+#> Exception: Exception: Exception: neg_binomial_2_log_lpmf: Precision parameter is 0, but must be positive finite! (in '/tmp/Rtmp7MjmHm/include_1/stan/functions/obs_lpmf.stan', line 35, column 4, included from 
+#> '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 13, column 0) (in '/tmp/Rtmp7MjmHm/include_1/stan/functions/delay_lpmf.stan', line 202, column 4, included from 
+#> '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 18, column 0) (in '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 427, column 6 to line 434, column 8) 
+#> Error evaluating model log probability: Non-finite function evaluation. 
+#> Error evaluating model log probability: Non-finite function evaluation. 
+#> Error evaluating model log probability: Non-finite function evaluation. 
+#> Error evaluating model log probability: Non-finite function evaluation. 
+#> Exception: Exception: Exception: neg_binomial_2_log_lpmf: Log location parameter[8] is inf, but must be finite! (in '/tmp/Rtmp7MjmHm/include_1/stan/functions/obs_lpmf.stan', line 35, column 4, included from 
+#> '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 13, column 0) (in '/tmp/Rtmp7MjmHm/include_1/stan/functions/delay_lpmf.stan', line 202, column 4, included from 
+#> '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 18, column 0) (in '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 427, column 6 to line 434, column 8) 
+#> Exception: Exception: Exception: neg_binomial_2_log_lpmf: Log location parameter[22] is inf, but must be finite! (in '/tmp/Rtmp7MjmHm/include_1/stan/functions/obs_lpmf.stan', line 35, column 4, included from 
+#> '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 13, column 0) (in '/tmp/Rtmp7MjmHm/include_1/stan/functions/delay_lpmf.stan', line 202, column 4, included from 
+#> '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 18, column 0) (in '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 427, column 6 to line 434, column 8)
+#> Path [1] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
+#>              99      -6.739e+02      2.041e-02   2.507e+00    1.000e+00  1.000e+00      9498 -7.492e+02 -7.646e+02                   
+#> Path [1] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
+#>             199      -6.737e+02      9.826e-04   1.037e-01    1.000e+00  1.000e+00     30469 -7.401e+02 -8.935e+02                   
+#> Path [1] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
+#>             204      -6.737e+02      2.173e-04   5.558e-02    1.000e+00  1.000e+00     31829 -7.401e+02 -9.508e+02                   
+#> Path [1] :Best Iter: [141] ELBO (-740.083634) evaluations: (31829) 
+#> Path [2] :Initial log joint density = -21954150.924858 
+#> Exception: Exception: Exception: neg_binomial_2_log_lpmf: Log location parameter[1] is inf, but must be finite! (in '/tmp/Rtmp7MjmHm/include_1/stan/functions/obs_lpmf.stan', line 35, column 4, included from 
+#> '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 13, column 0) (in '/tmp/Rtmp7MjmHm/include_1/stan/functions/delay_lpmf.stan', line 202, column 4, included from 
+#> '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 18, column 0) (in '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 427, column 6 to line 434, column 8) 
+#> Exception: Exception: Exception: neg_binomial_2_log_lpmf: Log location parameter[8] is inf, but must be finite! (in '/tmp/Rtmp7MjmHm/include_1/stan/functions/obs_lpmf.stan', line 35, column 4, included from 
+#> '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 13, column 0) (in '/tmp/Rtmp7MjmHm/include_1/stan/functions/delay_lpmf.stan', line 202, column 4, included from 
+#> '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 18, column 0) (in '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 427, column 6 to line 434, column 8) 
+#> Exception: Exception: Exception: neg_binomial_2_log_lpmf: Log location parameter[8] is inf, but must be finite! (in '/tmp/Rtmp7MjmHm/include_1/stan/functions/obs_lpmf.stan', line 35, column 4, included from 
+#> '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 13, column 0) (in '/tmp/Rtmp7MjmHm/include_1/stan/functions/delay_lpmf.stan', line 202, column 4, included from 
+#> '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 18, column 0) (in '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 427, column 6 to line 434, column 8) 
+#> Exception: Exception: Exception: neg_binomial_2_log_lpmf: Log location parameter[29] is inf, but must be finite! (in '/tmp/Rtmp7MjmHm/include_1/stan/functions/obs_lpmf.stan', line 35, column 4, included from 
+#> '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 13, column 0) (in '/tmp/Rtmp7MjmHm/include_1/stan/functions/delay_lpmf.stan', line 202, column 4, included from 
+#> '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 18, column 0) (in '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 427, column 6 to line 434, column 8) 
+#> Exception: Exception: Exception: neg_binomial_2_log_lpmf: Precision parameter is 0, but must be positive finite! (in '/tmp/Rtmp7MjmHm/include_1/stan/functions/obs_lpmf.stan', line 35, column 4, included from 
+#> '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 13, column 0) (in '/tmp/Rtmp7MjmHm/include_1/stan/functions/delay_lpmf.stan', line 202, column 4, included from 
+#> '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 18, column 0) (in '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 427, column 6 to line 434, column 8) 
+#> Error evaluating model log probability: Non-finite function evaluation. 
+#> Error evaluating model log probability: Non-finite function evaluation. 
+#> Error evaluating model log probability: Non-finite function evaluation. 
+#> Error evaluating model log probability: Non-finite function evaluation. 
+#> Exception: Exception: Exception: neg_binomial_2_log_lpmf: Log location parameter[8] is inf, but must be finite! (in '/tmp/Rtmp7MjmHm/include_1/stan/functions/obs_lpmf.stan', line 35, column 4, included from 
+#> '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 13, column 0) (in '/tmp/Rtmp7MjmHm/include_1/stan/functions/delay_lpmf.stan', line 202, column 4, included from 
+#> '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 18, column 0) (in '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 427, column 6 to line 434, column 8) 
+#> Exception: Exception: Exception: neg_binomial_2_log_lpmf: Log location parameter[22] is inf, but must be finite! (in '/tmp/Rtmp7MjmHm/include_1/stan/functions/obs_lpmf.stan', line 35, column 4, included from 
+#> '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 13, column 0) (in '/tmp/Rtmp7MjmHm/include_1/stan/functions/delay_lpmf.stan', line 202, column 4, included from 
+#> '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 18, column 0) (in '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 427, column 6 to line 434, column 8) 
+#> Path [2] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
+#>              99      -6.739e+02      2.041e-02   2.507e+00    1.000e+00  1.000e+00      9498 -7.469e+02 -7.544e+02                   
+#> Path [2] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
+#>             199      -6.737e+02      9.826e-04   1.037e-01    1.000e+00  1.000e+00     30469 -7.409e+02 -8.589e+02                   
+#> Path [2] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
+#>             204      -6.737e+02      2.173e-04   5.558e-02    1.000e+00  1.000e+00     31829 -7.409e+02 -1.842e+03                   
+#> Path [2] :Best Iter: [141] ELBO (-740.942390) evaluations: (31829) 
+#> Path [3] :Initial log joint density = -21954150.924858 
+#> Exception: Exception: Exception: neg_binomial_2_log_lpmf: Log location parameter[1] is inf, but must be finite! (in '/tmp/Rtmp7MjmHm/include_1/stan/functions/obs_lpmf.stan', line 35, column 4, included from 
+#> '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 13, column 0) (in '/tmp/Rtmp7MjmHm/include_1/stan/functions/delay_lpmf.stan', line 202, column 4, included from 
+#> '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 18, column 0) (in '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 427, column 6 to line 434, column 8) 
+#> Exception: Exception: Exception: neg_binomial_2_log_lpmf: Log location parameter[8] is inf, but must be finite! (in '/tmp/Rtmp7MjmHm/include_1/stan/functions/obs_lpmf.stan', line 35, column 4, included from 
+#> '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 13, column 0) (in '/tmp/Rtmp7MjmHm/include_1/stan/functions/delay_lpmf.stan', line 202, column 4, included from 
+#> '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 18, column 0) (in '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 427, column 6 to line 434, column 8) 
+#> Exception: Exception: Exception: neg_binomial_2_log_lpmf: Log location parameter[8] is inf, but must be finite! (in '/tmp/Rtmp7MjmHm/include_1/stan/functions/obs_lpmf.stan', line 35, column 4, included from 
+#> '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 13, column 0) (in '/tmp/Rtmp7MjmHm/include_1/stan/functions/delay_lpmf.stan', line 202, column 4, included from 
+#> '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 18, column 0) (in '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 427, column 6 to line 434, column 8) 
+#> Exception: Exception: Exception: neg_binomial_2_log_lpmf: Log location parameter[29] is inf, but must be finite! (in '/tmp/Rtmp7MjmHm/include_1/stan/functions/obs_lpmf.stan', line 35, column 4, included from 
+#> '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 13, column 0) (in '/tmp/Rtmp7MjmHm/include_1/stan/functions/delay_lpmf.stan', line 202, column 4, included from 
+#> '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 18, column 0) (in '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 427, column 6 to line 434, column 8) 
+#> Exception: Exception: Exception: neg_binomial_2_log_lpmf: Precision parameter is 0, but must be positive finite! (in '/tmp/Rtmp7MjmHm/include_1/stan/functions/obs_lpmf.stan', line 35, column 4, included from 
+#> '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 13, column 0) (in '/tmp/Rtmp7MjmHm/include_1/stan/functions/delay_lpmf.stan', line 202, column 4, included from 
+#> '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 18, column 0) (in '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 427, column 6 to line 434, column 8) 
+#> Error evaluating model log probability: Non-finite function evaluation. 
+#> Error evaluating model log probability: Non-finite function evaluation. 
+#> Error evaluating model log probability: Non-finite function evaluation. 
+#> Error evaluating model log probability: Non-finite function evaluation. 
+#> Exception: Exception: Exception: neg_binomial_2_log_lpmf: Log location parameter[8] is inf, but must be finite! (in '/tmp/Rtmp7MjmHm/include_1/stan/functions/obs_lpmf.stan', line 35, column 4, included from 
+#> '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 13, column 0) (in '/tmp/Rtmp7MjmHm/include_1/stan/functions/delay_lpmf.stan', line 202, column 4, included from 
+#> '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 18, column 0) (in '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 427, column 6 to line 434, column 8) 
+#> Exception: Exception: Exception: neg_binomial_2_log_lpmf: Log location parameter[22] is inf, but must be finite! (in '/tmp/Rtmp7MjmHm/include_1/stan/functions/obs_lpmf.stan', line 35, column 4, included from 
+#> '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 13, column 0) (in '/tmp/Rtmp7MjmHm/include_1/stan/functions/delay_lpmf.stan', line 202, column 4, included from 
+#> '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 18, column 0) (in '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 427, column 6 to line 434, column 8) 
+#> Path [3] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
+#>              99      -6.739e+02      2.041e-02   2.507e+00    1.000e+00  1.000e+00      9498 -7.494e+02 -7.545e+02                   
+#> Path [3] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
+#>             199      -6.737e+02      9.826e-04   1.037e-01    1.000e+00  1.000e+00     30469 -7.356e+02 -1.029e+03                   
+#> Path [3] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
+#>             204      -6.737e+02      2.173e-04   5.558e-02    1.000e+00  1.000e+00     31829 -7.356e+02 -1.088e+03                   
+#> Path [3] :Best Iter: [141] ELBO (-735.636451) evaluations: (31829) 
+#> Path [4] :Initial log joint density = -21954150.924858 
+#> Exception: Exception: Exception: neg_binomial_2_log_lpmf: Log location parameter[1] is inf, but must be finite! (in '/tmp/Rtmp7MjmHm/include_1/stan/functions/obs_lpmf.stan', line 35, column 4, included from 
+#> '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 13, column 0) (in '/tmp/Rtmp7MjmHm/include_1/stan/functions/delay_lpmf.stan', line 202, column 4, included from 
+#> '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 18, column 0) (in '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 427, column 6 to line 434, column 8) 
+#> Exception: Exception: Exception: neg_binomial_2_log_lpmf: Log location parameter[8] is inf, but must be finite! (in '/tmp/Rtmp7MjmHm/include_1/stan/functions/obs_lpmf.stan', line 35, column 4, included from 
+#> '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 13, column 0) (in '/tmp/Rtmp7MjmHm/include_1/stan/functions/delay_lpmf.stan', line 202, column 4, included from 
+#> '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 18, column 0) (in '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 427, column 6 to line 434, column 8) 
+#> Exception: Exception: Exception: neg_binomial_2_log_lpmf: Log location parameter[8] is inf, but must be finite! (in '/tmp/Rtmp7MjmHm/include_1/stan/functions/obs_lpmf.stan', line 35, column 4, included from 
+#> '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 13, column 0) (in '/tmp/Rtmp7MjmHm/include_1/stan/functions/delay_lpmf.stan', line 202, column 4, included from 
+#> '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 18, column 0) (in '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 427, column 6 to line 434, column 8) 
+#> Exception: Exception: Exception: neg_binomial_2_log_lpmf: Log location parameter[29] is inf, but must be finite! (in '/tmp/Rtmp7MjmHm/include_1/stan/functions/obs_lpmf.stan', line 35, column 4, included from 
+#> '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 13, column 0) (in '/tmp/Rtmp7MjmHm/include_1/stan/functions/delay_lpmf.stan', line 202, column 4, included from 
+#> '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 18, column 0) (in '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 427, column 6 to line 434, column 8) 
+#> Exception: Exception: Exception: neg_binomial_2_log_lpmf: Precision parameter is 0, but must be positive finite! (in '/tmp/Rtmp7MjmHm/include_1/stan/functions/obs_lpmf.stan', line 35, column 4, included from 
+#> '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 13, column 0) (in '/tmp/Rtmp7MjmHm/include_1/stan/functions/delay_lpmf.stan', line 202, column 4, included from 
+#> '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 18, column 0) (in '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 427, column 6 to line 434, column 8) 
+#> Error evaluating model log probability: Non-finite function evaluation. 
+#> Error evaluating model log probability: Non-finite function evaluation. 
+#> Error evaluating model log probability: Non-finite function evaluation. 
+#> Error evaluating model log probability: Non-finite function evaluation. 
+#> Exception: Exception: Exception: neg_binomial_2_log_lpmf: Log location parameter[8] is inf, but must be finite! (in '/tmp/Rtmp7MjmHm/include_1/stan/functions/obs_lpmf.stan', line 35, column 4, included from 
+#> '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 13, column 0) (in '/tmp/Rtmp7MjmHm/include_1/stan/functions/delay_lpmf.stan', line 202, column 4, included from 
+#> '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 18, column 0) (in '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 427, column 6 to line 434, column 8) 
+#> Exception: Exception: Exception: neg_binomial_2_log_lpmf: Log location parameter[22] is inf, but must be finite! (in '/tmp/Rtmp7MjmHm/include_1/stan/functions/obs_lpmf.stan', line 35, column 4, included from 
+#> '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 13, column 0) (in '/tmp/Rtmp7MjmHm/include_1/stan/functions/delay_lpmf.stan', line 202, column 4, included from 
+#> '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 18, column 0) (in '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 427, column 6 to line 434, column 8) 
+#> Path [4] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
+#>              99      -6.739e+02      2.041e-02   2.507e+00    1.000e+00  1.000e+00      9498 -7.458e+02 -7.538e+02                   
+#> Path [4] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
+#>             199      -6.737e+02      9.826e-04   1.037e-01    1.000e+00  1.000e+00     30469 -7.379e+02 -9.008e+02                   
+#> Path [4] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
+#>             204      -6.737e+02      2.173e-04   5.558e-02    1.000e+00  1.000e+00     31829 -7.379e+02 -9.038e+02                   
+#> Path [4] :Best Iter: [141] ELBO (-737.913515) evaluations: (31829) 
+#> Pareto k value (1.8) is greater than 0.7. Importance resampling was not able to improve the approximation, which may indicate that the approximation itself is poor. 
+#> Finished in  1.6 seconds.
+#> Path [1] :Initial log joint density = -34639568.204672 
+#> Exception: Exception: Exception: neg_binomial_2_log_lpmf: Log location parameter[1] is inf, but must be finite! (in '/tmp/Rtmp7MjmHm/include_1/stan/functions/obs_lpmf.stan', line 35, column 4, included from 
+#> '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 13, column 0) (in '/tmp/Rtmp7MjmHm/include_1/stan/functions/delay_lpmf.stan', line 202, column 4, included from 
+#> '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 18, column 0) (in '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 427, column 6 to line 434, column 8) 
+#> Exception: Exception: Exception: neg_binomial_2_log_lpmf: Precision parameter is 0, but must be positive finite! (in '/tmp/Rtmp7MjmHm/include_1/stan/functions/obs_lpmf.stan', line 35, column 4, included from 
+#> '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 13, column 0) (in '/tmp/Rtmp7MjmHm/include_1/stan/functions/delay_lpmf.stan', line 202, column 4, included from 
+#> '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 18, column 0) (in '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 427, column 6 to line 434, column 8) 
+#> Exception: Exception: Exception: neg_binomial_2_log_lpmf: Precision parameter is 0, but must be positive finite! (in '/tmp/Rtmp7MjmHm/include_1/stan/functions/obs_lpmf.stan', line 35, column 4, included from 
+#> '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 13, column 0) (in '/tmp/Rtmp7MjmHm/include_1/stan/functions/delay_lpmf.stan', line 202, column 4, included from 
+#> '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 18, column 0) (in '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 427, column 6 to line 434, column 8) 
+#> Error evaluating model log probability: Non-finite function evaluation. 
+#> Error evaluating model log probability: Non-finite function evaluation. 
+#> Error evaluating model log probability: Non-finite function evaluation. 
+#> Error evaluating model log probability: Non-finite function evaluation. 
+#> Error evaluating model log probability: Non-finite function evaluation.
+#> Path [1] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
+#>              99      -6.738e+02      5.191e-02   3.003e+00    1.000e+00  1.000e+00      9035 -7.531e+02 -8.134e+02                   
+#> Path [1] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
+#>             198      -6.737e+02      1.419e-04   3.832e-02    1.000e+00  1.000e+00     30311 -7.482e+02 -7.816e+02                   
+#> Path [1] :Best Iter: [131] ELBO (-748.165558) evaluations: (30311) 
+#> Path [2] :Initial log joint density = -34639568.204672 
+#> Exception: Exception: Exception: neg_binomial_2_log_lpmf: Log location parameter[1] is inf, but must be finite! (in '/tmp/Rtmp7MjmHm/include_1/stan/functions/obs_lpmf.stan', line 35, column 4, included from 
+#> '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 13, column 0) (in '/tmp/Rtmp7MjmHm/include_1/stan/functions/delay_lpmf.stan', line 202, column 4, included from 
+#> '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 18, column 0) (in '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 427, column 6 to line 434, column 8) 
+#> Exception: Exception: Exception: neg_binomial_2_log_lpmf: Precision parameter is 0, but must be positive finite! (in '/tmp/Rtmp7MjmHm/include_1/stan/functions/obs_lpmf.stan', line 35, column 4, included from 
+#> '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 13, column 0) (in '/tmp/Rtmp7MjmHm/include_1/stan/functions/delay_lpmf.stan', line 202, column 4, included from 
+#> '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 18, column 0) (in '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 427, column 6 to line 434, column 8) 
+#> Exception: Exception: Exception: neg_binomial_2_log_lpmf: Precision parameter is 0, but must be positive finite! (in '/tmp/Rtmp7MjmHm/include_1/stan/functions/obs_lpmf.stan', line 35, column 4, included from 
+#> '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 13, column 0) (in '/tmp/Rtmp7MjmHm/include_1/stan/functions/delay_lpmf.stan', line 202, column 4, included from 
+#> '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 18, column 0) (in '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 427, column 6 to line 434, column 8) 
+#> Error evaluating model log probability: Non-finite function evaluation. 
+#> Error evaluating model log probability: Non-finite function evaluation. 
+#> Error evaluating model log probability: Non-finite function evaluation. 
+#> Error evaluating model log probability: Non-finite function evaluation. 
+#> Error evaluating model log probability: Non-finite function evaluation. 
+#> Path [2] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
+#>              99      -6.738e+02      5.191e-02   3.003e+00    1.000e+00  1.000e+00      9035 -7.535e+02 -7.718e+02                   
+#> Path [2] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
+#>             198      -6.737e+02      1.419e-04   3.832e-02    1.000e+00  1.000e+00     30311 -7.466e+02 -7.815e+02                   
+#> Path [2] :Best Iter: [141] ELBO (-746.559899) evaluations: (30311) 
+#> Path [3] :Initial log joint density = -34639568.204672 
+#> Exception: Exception: Exception: neg_binomial_2_log_lpmf: Log location parameter[1] is inf, but must be finite! (in '/tmp/Rtmp7MjmHm/include_1/stan/functions/obs_lpmf.stan', line 35, column 4, included from 
+#> '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 13, column 0) (in '/tmp/Rtmp7MjmHm/include_1/stan/functions/delay_lpmf.stan', line 202, column 4, included from 
+#> '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 18, column 0) (in '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 427, column 6 to line 434, column 8) 
+#> Exception: Exception: Exception: neg_binomial_2_log_lpmf: Precision parameter is 0, but must be positive finite! (in '/tmp/Rtmp7MjmHm/include_1/stan/functions/obs_lpmf.stan', line 35, column 4, included from 
+#> '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 13, column 0) (in '/tmp/Rtmp7MjmHm/include_1/stan/functions/delay_lpmf.stan', line 202, column 4, included from 
+#> '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 18, column 0) (in '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 427, column 6 to line 434, column 8) 
+#> Exception: Exception: Exception: neg_binomial_2_log_lpmf: Precision parameter is 0, but must be positive finite! (in '/tmp/Rtmp7MjmHm/include_1/stan/functions/obs_lpmf.stan', line 35, column 4, included from 
+#> '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 13, column 0) (in '/tmp/Rtmp7MjmHm/include_1/stan/functions/delay_lpmf.stan', line 202, column 4, included from 
+#> '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 18, column 0) (in '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 427, column 6 to line 434, column 8) 
+#> Error evaluating model log probability: Non-finite function evaluation. 
+#> Error evaluating model log probability: Non-finite function evaluation. 
+#> Error evaluating model log probability: Non-finite function evaluation. 
+#> Error evaluating model log probability: Non-finite function evaluation. 
+#> Error evaluating model log probability: Non-finite function evaluation. 
+#> Path [3] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
+#>              99      -6.738e+02      5.191e-02   3.003e+00    1.000e+00  1.000e+00      9035 -7.541e+02 -7.900e+02                   
+#> Path [3] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
+#>             198      -6.737e+02      1.419e-04   3.832e-02    1.000e+00  1.000e+00     30311 -7.474e+02 -7.784e+02                   
+#> Path [3] :Best Iter: [143] ELBO (-747.446806) evaluations: (30311) 
+#> Path [4] :Initial log joint density = -34639568.204672 
+#> Exception: Exception: Exception: neg_binomial_2_log_lpmf: Log location parameter[1] is inf, but must be finite! (in '/tmp/Rtmp7MjmHm/include_1/stan/functions/obs_lpmf.stan', line 35, column 4, included from 
+#> '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 13, column 0) (in '/tmp/Rtmp7MjmHm/include_1/stan/functions/delay_lpmf.stan', line 202, column 4, included from 
+#> '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 18, column 0) (in '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 427, column 6 to line 434, column 8) 
+#> Exception: Exception: Exception: neg_binomial_2_log_lpmf: Precision parameter is 0, but must be positive finite! (in '/tmp/Rtmp7MjmHm/include_1/stan/functions/obs_lpmf.stan', line 35, column 4, included from 
+#> '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 13, column 0) (in '/tmp/Rtmp7MjmHm/include_1/stan/functions/delay_lpmf.stan', line 202, column 4, included from 
+#> '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 18, column 0) (in '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 427, column 6 to line 434, column 8) 
+#> Exception: Exception: Exception: neg_binomial_2_log_lpmf: Precision parameter is 0, but must be positive finite! (in '/tmp/Rtmp7MjmHm/include_1/stan/functions/obs_lpmf.stan', line 35, column 4, included from 
+#> '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 13, column 0) (in '/tmp/Rtmp7MjmHm/include_1/stan/functions/delay_lpmf.stan', line 202, column 4, included from 
+#> '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 18, column 0) (in '/tmp/Rtmp7MjmHm/model-116e1e66f0a505.stan', line 427, column 6 to line 434, column 8) 
+#> Error evaluating model log probability: Non-finite function evaluation. 
+#> Error evaluating model log probability: Non-finite function evaluation. 
+#> Error evaluating model log probability: Non-finite function evaluation. 
+#> Error evaluating model log probability: Non-finite function evaluation. 
+#> Error evaluating model log probability: Non-finite function evaluation. 
+#> Path [4] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
+#>              99      -6.738e+02      5.191e-02   3.003e+00    1.000e+00  1.000e+00      9035 -7.475e+02 -7.833e+02                   
+#> Path [4] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
+#>             198      -6.737e+02      1.419e-04   3.832e-02    1.000e+00  1.000e+00     30311 -7.379e+02 -7.786e+02                   
+#> Path [4] :Best Iter: [141] ELBO (-737.866424) evaluations: (30311) 
+#> Pareto k value (1.8) is greater than 0.7. Importance resampling was not able to improve the approximation, which may indicate that the approximation itself is poor. 
+#> Finished in  1.6 seconds.
 ```
 
 Results from each region are stored in a `regional` list with across region summary measures and plots stored in a `summary` list. All results can be set to be internally saved by setting the `target_folder` and `summary_dir` arguments. Each region can be estimated in parallel using the `{future}` package (when in most scenarios `cores` should be set to 1). For routine use each MCMC chain can also be run in parallel (with `future` = `TRUE`) with a time out (`max_execution_time`) allowing for partial results to be returned if a subset of chains is running longer than expected. See the documentation for the [`{future}`](https://future.futureverse.org/) package for details on nested futures.
@@ -279,10 +540,10 @@ knitr::kable(estimates$summary$summarised_results$table)
 
 
 
-|Region   |New infections per day |Expected change in reports |Effective reproduction no. |Rate of growth          |Doubling/halving time (days) |
-|:--------|:----------------------|:--------------------------|:--------------------------|:-----------------------|:----------------------------|
-|realland |2002 (1078 -- 3830)    |Likely decreasing          |0.85 (0.63 -- 1.1)         |-0.041 (-0.11 -- 0.035) |-17 (20 -- -6.3)             |
-|testland |3977 (2069 -- 7977)    |Likely decreasing          |0.85 (0.61 -- 1.2)         |-0.043 (-0.11 -- 0.042) |-16 (16 -- -6.1)             |
+|Region   |New infections per day    |Expected change in reports |Effective reproduction no. |Rate of growth        |Doubling/halving time (days) |
+|:--------|:-------------------------|:--------------------------|:--------------------------|:---------------------|:----------------------------|
+|realland |234080 (158240 -- 345691) |Stable                     |1.1 (0.65 -- 1.6)          |0.072 (-0.43 -- 0.49) |9.7 (1.4 -- -1.6)            |
+|testland |230595 (159497 -- 343321) |Likely increasing          |1.1 (0.67 -- 1.6)          |0.075 (-0.4 -- 0.5)   |9.2 (1.4 -- -1.7)            |
 
 
 

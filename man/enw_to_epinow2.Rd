@@ -4,7 +4,7 @@
 \alias{enw_to_epinow2}
 \title{Convert epinowcast output to EpiNow2 format}
 \usage{
-enw_to_epinow2(enw_fit, original_data, generation_time)
+enw_to_epinow2(enw_fit, original_data, generation_time, delays = NULL)
 }
 \arguments{
 \item{enw_fit}{An epinowcast fit object.}

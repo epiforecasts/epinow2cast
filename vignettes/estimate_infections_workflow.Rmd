@@ -15,7 +15,7 @@ vignette: >
 
 
 This vignette describes the typical workflow for estimating reproduction numbers and performing short-term forecasts for a disease spreading in a given setting using _EpiNow2_.
-The vignette uses the default non-stationary Gaussian process model included in the package.
+The vignette uses the default random walk model included in the package.
 See other vignettes for a more thorough exploration of [alternative model variants](estimate_infections_options.html) and [theoretical background](estimate_infections.html).
 
 # Data
@@ -51,11 +51,6 @@ We first load the _EpiNow2_ package.
 
 ``` r
 library("EpiNow2")
-#> 
-#> Attaching package: 'EpiNow2'
-#> The following object is masked from 'package:stats':
-#> 
-#>     Gamma
 ```
 
 We then set the number of cores to use. We will want to run 4 MCMC chains in parallel so we set this to 4. 
@@ -140,8 +135,7 @@ There are various ways the specific delay distributions mentioned below might be
 Often, they will come directly from the existing literature reviewed by the user and studies conducted elsewhere.
 Sometimes it might be possible to obtain them from existing databases, e.g. using the [epiparameter](https://github.com/epiverse-trace/epiparameter) R package.
 Alternatively they might be obtainable from raw data, e.g. line-listed individual-level records.
-The _EpiNow2_ package contains functionality for estimating delay distributions from observed delays in the `estimate_delay()` function.
-For a more comprehensive treatment of delays and their estimation avoiding common biases one can also consider the [epidist](https://epidist.epinowcast.org/index.html) R package.
+For a comprehensive treatment of delays and their estimation avoiding common biases one can consider the [epidist](https://epidist.epinowcast.org/index.html) R package.
 
 ### Generation intervals
 
@@ -229,21 +223,7 @@ For example, data reported by symptom onset may only become part of the dataset 
 Statistically, this means our data is right-truncated.
 In practice, it means that recent data will be unlikely to be complete.
 
-The amount of such truncation that exists in the data can be estimated from multiple snapshots of the data, i.e. what the data looked like at multiple past dates.
-One can then use methods that use the amount of backfilling that occurred 1, 2, ... days after data for a date are first reported.
-In _EpiNow2_, this can be done using the `estimate_truncation()` method which returns, amongst others, posterior estimates of the truncation distribution.
-For more details on the model used for this, see the [estimate_truncation](estimate_truncation.html) vignette.
-
-
-``` r
-?estimate_truncation
-```
-
-In the `estimate_infections()` function, the truncation distribution is defined by a call to `trunc_opts()`, a function that takes a single argument defined as a `dist_spec` (either defined by the user or obtained from a call to `estimate_truncation()` or any other method for estimating right truncation).
-This will then be used to correct for right truncation in the data.
-
-The separation of estimation of right truncation on the one hand and estimation of the reproduction number on the other may be attractive for practical purposes but is questionable statistically as it separates two processes that are not strictly separable, potentially introducing a bias.
-An alternative approach where these are estimated jointly is being implemented in the [epinowcast](https://package.epinowcast.org/) package, which is being developed by the _EpiNow2_ developers with collaborators.
+For jointly estimating truncation and the reproduction number, consider using the [epinowcast](https://package.epinowcast.org/) package directly, which handles this natively.
 
 ## Completeness of reporting
 
@@ -290,18 +270,257 @@ def <- estimate_infections(
   reported_cases,
   generation_time = gt_opts(generation_time),
   delays = delay_opts(delay),
-  rt = rt_opts(prior = rt_prior),
+  rt = rt_opts(prior = rt_prior, rw = 7),
   forecast = forecast_opts(horizon = 7)
 )
+#> ℹ Using model /home/sebfunk/R/x86_64-pc-linux-gnu-library/4.5/epinowcast/stan/epinowcast.stan.
+#> ℹ Include is /home/sebfunk/R/x86_64-pc-linux-gnu-library/4.5/epinowcast/stan.
+#> ! `enw_cache_location` is not set.
+#> ℹ Using `tempdir()` at /tmp/RtmpBlBUkN for the epinowcast model cache location.
+#> ℹ Set a specific cache location using `enw_set_cache` to control Stan
+#>   recompilation in this R session or across R sessions.
+#> ℹ For example: `enw_set_cache(tools::R_user_dir(package = "epinowcast",
+#>   "cache"), type = c('session', 'persistent'))`.
+#> ℹ See `?enw_set_cache` for details.
+#> ℹ Using pathfinder initialization.
+#> Path [1] :Initial log joint density = -26144030.713986 
+#> Exception: Exception: Exception: neg_binomial_2_log_lpmf: Log location parameter[1] is inf, but must be finite! (in '/tmp/RtmpBlBUkN/include_1/stan/functions/obs_lpmf.stan', line 35, column 4, included from 
+#> '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 13, column 0) (in '/tmp/RtmpBlBUkN/include_1/stan/functions/delay_lpmf.stan', line 202, column 4, included from 
+#> '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 18, column 0) (in '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 427, column 6 to line 434, column 8) 
+#> Exception: Exception: Exception: neg_binomial_2_log_lpmf: Log location parameter[8] is inf, but must be finite! (in '/tmp/RtmpBlBUkN/include_1/stan/functions/obs_lpmf.stan', line 35, column 4, included from 
+#> '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 13, column 0) (in '/tmp/RtmpBlBUkN/include_1/stan/functions/delay_lpmf.stan', line 202, column 4, included from 
+#> '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 18, column 0) (in '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 427, column 6 to line 434, column 8) 
+#> Exception: Exception: Exception: neg_binomial_2_log_lpmf: Log location parameter[9] is inf, but must be finite! (in '/tmp/RtmpBlBUkN/include_1/stan/functions/obs_lpmf.stan', line 35, column 4, included from 
+#> '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 13, column 0) (in '/tmp/RtmpBlBUkN/include_1/stan/functions/delay_lpmf.stan', line 202, column 4, included from 
+#> '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 18, column 0) (in '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 427, column 6 to line 434, column 8) 
+#> Exception: Exception: Exception: neg_binomial_2_log_lpmf: Log location parameter[20] is inf, but must be finite! (in '/tmp/RtmpBlBUkN/include_1/stan/functions/obs_lpmf.stan', line 35, column 4, included from 
+#> '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 13, column 0) (in '/tmp/RtmpBlBUkN/include_1/stan/functions/delay_lpmf.stan', line 202, column 4, included from 
+#> '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 18, column 0) (in '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 427, column 6 to line 434, column 8) 
+#> Exception: Exception: Exception: neg_binomial_2_log_lpmf: Log location parameter[52] is inf, but must be finite! (in '/tmp/RtmpBlBUkN/include_1/stan/functions/obs_lpmf.stan', line 35, column 4, included from 
+#> '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 13, column 0) (in '/tmp/RtmpBlBUkN/include_1/stan/functions/delay_lpmf.stan', line 202, column 4, included from 
+#> '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 18, column 0) (in '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 427, column 6 to line 434, column 8) 
+#> Error evaluating model log probability: Non-finite function evaluation. 
+#> Error evaluating model log probability: Non-finite function evaluation. 
+#> Error evaluating model log probability: Non-finite function evaluation. 
+#> Error evaluating model log probability: Non-finite function evaluation.
+#> Chain 1 Warning: file '/tmp/RtmpBlBUkN/init-116b683891862e_1.json' is being used to initialize all 4 chains!
+#> Path [1] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
+#>              99      -6.806e+02      7.284e-02   2.670e+01    1.000e+00  1.000e+00      9504 -7.480e+02 -8.065e+02                   
+#> Path [1] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
+#>             199      -6.711e+02      1.606e-02   1.564e+00    1.000e+00  1.000e+00     30969 -7.289e+02 -7.799e+02                   
+#> Path [1] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
+#>             259      -6.711e+02      6.077e-04   8.883e-02    1.000e+00  1.000e+00     49654 -7.289e+02 -1.093e+03                   
+#> Path [1] :Best Iter: [135] ELBO (-728.917972) evaluations: (49654) 
+#> Path [2] :Initial log joint density = -26144030.713986 
+#> Exception: Exception: Exception: neg_binomial_2_log_lpmf: Log location parameter[1] is inf, but must be finite! (in '/tmp/RtmpBlBUkN/include_1/stan/functions/obs_lpmf.stan', line 35, column 4, included from 
+#> '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 13, column 0) (in '/tmp/RtmpBlBUkN/include_1/stan/functions/delay_lpmf.stan', line 202, column 4, included from 
+#> '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 18, column 0) (in '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 427, column 6 to line 434, column 8) 
+#> Exception: Exception: Exception: neg_binomial_2_log_lpmf: Log location parameter[8] is inf, but must be finite! (in '/tmp/RtmpBlBUkN/include_1/stan/functions/obs_lpmf.stan', line 35, column 4, included from 
+#> '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 13, column 0) (in '/tmp/RtmpBlBUkN/include_1/stan/functions/delay_lpmf.stan', line 202, column 4, included from 
+#> '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 18, column 0) (in '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 427, column 6 to line 434, column 8) 
+#> Exception: Exception: Exception: neg_binomial_2_log_lpmf: Log location parameter[9] is inf, but must be finite! (in '/tmp/RtmpBlBUkN/include_1/stan/functions/obs_lpmf.stan', line 35, column 4, included from 
+#> '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 13, column 0) (in '/tmp/RtmpBlBUkN/include_1/stan/functions/delay_lpmf.stan', line 202, column 4, included from 
+#> '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 18, column 0) (in '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 427, column 6 to line 434, column 8) 
+#> Exception: Exception: Exception: neg_binomial_2_log_lpmf: Log location parameter[20] is inf, but must be finite! (in '/tmp/RtmpBlBUkN/include_1/stan/functions/obs_lpmf.stan', line 35, column 4, included from 
+#> '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 13, column 0) (in '/tmp/RtmpBlBUkN/include_1/stan/functions/delay_lpmf.stan', line 202, column 4, included from 
+#> '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 18, column 0) (in '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 427, column 6 to line 434, column 8) 
+#> Exception: Exception: Exception: neg_binomial_2_log_lpmf: Log location parameter[52] is inf, but must be finite! (in '/tmp/RtmpBlBUkN/include_1/stan/functions/obs_lpmf.stan', line 35, column 4, included from 
+#> '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 13, column 0) (in '/tmp/RtmpBlBUkN/include_1/stan/functions/delay_lpmf.stan', line 202, column 4, included from 
+#> '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 18, column 0) (in '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 427, column 6 to line 434, column 8) 
+#> Error evaluating model log probability: Non-finite function evaluation. 
+#> Error evaluating model log probability: Non-finite function evaluation. 
+#> Error evaluating model log probability: Non-finite function evaluation. 
+#> Error evaluating model log probability: Non-finite function evaluation. 
+#> Path [2] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
+#>              99      -6.806e+02      7.284e-02   2.670e+01    1.000e+00  1.000e+00      9504 -7.478e+02 -8.115e+02                   
+#> Path [2] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
+#>             199      -6.711e+02      1.606e-02   1.564e+00    1.000e+00  1.000e+00     30969 -7.325e+02 -8.465e+02                   
+#> Path [2] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
+#>             259      -6.711e+02      6.077e-04   8.883e-02    1.000e+00  1.000e+00     49654 -7.325e+02 -1.030e+03                   
+#> Path [2] :Best Iter: [136] ELBO (-732.461677) evaluations: (49654) 
+#> Path [3] :Initial log joint density = -26144030.713986 
+#> Exception: Exception: Exception: neg_binomial_2_log_lpmf: Log location parameter[1] is inf, but must be finite! (in '/tmp/RtmpBlBUkN/include_1/stan/functions/obs_lpmf.stan', line 35, column 4, included from 
+#> '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 13, column 0) (in '/tmp/RtmpBlBUkN/include_1/stan/functions/delay_lpmf.stan', line 202, column 4, included from 
+#> '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 18, column 0) (in '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 427, column 6 to line 434, column 8) 
+#> Exception: Exception: Exception: neg_binomial_2_log_lpmf: Log location parameter[8] is inf, but must be finite! (in '/tmp/RtmpBlBUkN/include_1/stan/functions/obs_lpmf.stan', line 35, column 4, included from 
+#> '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 13, column 0) (in '/tmp/RtmpBlBUkN/include_1/stan/functions/delay_lpmf.stan', line 202, column 4, included from 
+#> '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 18, column 0) (in '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 427, column 6 to line 434, column 8) 
+#> Exception: Exception: Exception: neg_binomial_2_log_lpmf: Log location parameter[9] is inf, but must be finite! (in '/tmp/RtmpBlBUkN/include_1/stan/functions/obs_lpmf.stan', line 35, column 4, included from 
+#> '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 13, column 0) (in '/tmp/RtmpBlBUkN/include_1/stan/functions/delay_lpmf.stan', line 202, column 4, included from 
+#> '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 18, column 0) (in '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 427, column 6 to line 434, column 8) 
+#> Exception: Exception: Exception: neg_binomial_2_log_lpmf: Log location parameter[20] is inf, but must be finite! (in '/tmp/RtmpBlBUkN/include_1/stan/functions/obs_lpmf.stan', line 35, column 4, included from 
+#> '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 13, column 0) (in '/tmp/RtmpBlBUkN/include_1/stan/functions/delay_lpmf.stan', line 202, column 4, included from 
+#> '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 18, column 0) (in '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 427, column 6 to line 434, column 8) 
+#> Exception: Exception: Exception: neg_binomial_2_log_lpmf: Log location parameter[52] is inf, but must be finite! (in '/tmp/RtmpBlBUkN/include_1/stan/functions/obs_lpmf.stan', line 35, column 4, included from 
+#> '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 13, column 0) (in '/tmp/RtmpBlBUkN/include_1/stan/functions/delay_lpmf.stan', line 202, column 4, included from 
+#> '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 18, column 0) (in '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 427, column 6 to line 434, column 8) 
+#> Error evaluating model log probability: Non-finite function evaluation. 
+#> Error evaluating model log probability: Non-finite function evaluation. 
+#> Error evaluating model log probability: Non-finite function evaluation. 
+#> Error evaluating model log probability: Non-finite function evaluation. 
+#> Path [3] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
+#>              99      -6.806e+02      7.284e-02   2.670e+01    1.000e+00  1.000e+00      9504 -7.483e+02 -8.408e+02                   
+#> Path [3] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
+#>             199      -6.711e+02      1.606e-02   1.564e+00    1.000e+00  1.000e+00     30969 -7.300e+02 -8.357e+02                   
+#> Path [3] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
+#>             259      -6.711e+02      6.077e-04   8.883e-02    1.000e+00  1.000e+00     49654 -7.300e+02 -1.195e+04                   
+#> Path [3] :Best Iter: [135] ELBO (-729.951025) evaluations: (49654) 
+#> Path [4] :Initial log joint density = -26144030.713986 
+#> Exception: Exception: Exception: neg_binomial_2_log_lpmf: Log location parameter[1] is inf, but must be finite! (in '/tmp/RtmpBlBUkN/include_1/stan/functions/obs_lpmf.stan', line 35, column 4, included from 
+#> '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 13, column 0) (in '/tmp/RtmpBlBUkN/include_1/stan/functions/delay_lpmf.stan', line 202, column 4, included from 
+#> '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 18, column 0) (in '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 427, column 6 to line 434, column 8) 
+#> Exception: Exception: Exception: neg_binomial_2_log_lpmf: Log location parameter[8] is inf, but must be finite! (in '/tmp/RtmpBlBUkN/include_1/stan/functions/obs_lpmf.stan', line 35, column 4, included from 
+#> '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 13, column 0) (in '/tmp/RtmpBlBUkN/include_1/stan/functions/delay_lpmf.stan', line 202, column 4, included from 
+#> '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 18, column 0) (in '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 427, column 6 to line 434, column 8) 
+#> Exception: Exception: Exception: neg_binomial_2_log_lpmf: Log location parameter[9] is inf, but must be finite! (in '/tmp/RtmpBlBUkN/include_1/stan/functions/obs_lpmf.stan', line 35, column 4, included from 
+#> '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 13, column 0) (in '/tmp/RtmpBlBUkN/include_1/stan/functions/delay_lpmf.stan', line 202, column 4, included from 
+#> '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 18, column 0) (in '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 427, column 6 to line 434, column 8) 
+#> Exception: Exception: Exception: neg_binomial_2_log_lpmf: Log location parameter[20] is inf, but must be finite! (in '/tmp/RtmpBlBUkN/include_1/stan/functions/obs_lpmf.stan', line 35, column 4, included from 
+#> '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 13, column 0) (in '/tmp/RtmpBlBUkN/include_1/stan/functions/delay_lpmf.stan', line 202, column 4, included from 
+#> '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 18, column 0) (in '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 427, column 6 to line 434, column 8) 
+#> Exception: Exception: Exception: neg_binomial_2_log_lpmf: Log location parameter[52] is inf, but must be finite! (in '/tmp/RtmpBlBUkN/include_1/stan/functions/obs_lpmf.stan', line 35, column 4, included from 
+#> '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 13, column 0) (in '/tmp/RtmpBlBUkN/include_1/stan/functions/delay_lpmf.stan', line 202, column 4, included from 
+#> '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 18, column 0) (in '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 427, column 6 to line 434, column 8) 
+#> Error evaluating model log probability: Non-finite function evaluation. 
+#> Error evaluating model log probability: Non-finite function evaluation. 
+#> Error evaluating model log probability: Non-finite function evaluation. 
+#> Error evaluating model log probability: Non-finite function evaluation. 
+#> Path [4] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
+#>              99      -6.806e+02      7.284e-02   2.670e+01    1.000e+00  1.000e+00      9504 -7.426e+02 -7.888e+02                   
+#> Path [4] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
+#>             199      -6.711e+02      1.606e-02   1.564e+00    1.000e+00  1.000e+00     30969 -7.296e+02 -8.126e+02                   
+#> Path [4] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
+#>             259      -6.711e+02      6.077e-04   8.883e-02    1.000e+00  1.000e+00     49654 -7.296e+02 -3.139e+03                   
+#> Path [4] :Best Iter: [136] ELBO (-729.581041) evaluations: (49654) 
+#> Pareto k value (1.9) is greater than 0.7. Importance resampling was not able to improve the approximation, which may indicate that the approximation itself is poor. 
+#> Finished in  1.9 seconds.
+#> ℹ Fitting the model using NUTS
+#> Init values were only set for a subset of parameters. 
+#> Missing init values for the following parameters:
+#>  - chain 1: expr_r_int, expl_beta_sd, refp_mean_int, refp_sd_int, refp_mean_beta, refp_sd_beta, refp_mean_beta_sd, refp_sd_beta_sd, refnp_int, refnp_beta, refnp_beta_sd, rep_beta, rep_beta_sd, miss_int, miss_beta, miss_beta_sd
+#>  - chain 2: expr_r_int, expl_beta_sd, refp_mean_int, refp_sd_int, refp_mean_beta, refp_sd_beta, refp_mean_beta_sd, refp_sd_beta_sd, refnp_int, refnp_beta, refnp_beta_sd, rep_beta, rep_beta_sd, miss_int, miss_beta, miss_beta_sd
+#>  - chain 3: expr_r_int, expl_beta_sd, refp_mean_int, refp_sd_int, refp_mean_beta, refp_sd_beta, refp_mean_beta_sd, refp_sd_beta_sd, refnp_int, refnp_beta, refnp_beta_sd, rep_beta, rep_beta_sd, miss_int, miss_beta, miss_beta_sd
+#>  - chain 4: expr_r_int, expl_beta_sd, refp_mean_int, refp_sd_int, refp_mean_beta, refp_sd_beta, refp_mean_beta_sd, refp_sd_beta_sd, refnp_int, refnp_beta, refnp_beta_sd, rep_beta, rep_beta_sd, miss_int, miss_beta, miss_beta_sd
+#> 
+#> To disable this message use options(cmdstanr_warn_inits = FALSE).
+#> 
+#> Chain 1 Informational Message: The current Metropolis proposal is about to be rejected because of the following issue:
+#> Chain 1 Exception: Exception: Exception: neg_binomial_2_log_lpmf: Log location parameter[8] is inf, but must be finite! (in '/tmp/RtmpBlBUkN/include_1/stan/functions/obs_lpmf.stan', line 35, column 4, included from
+#> Chain 1 '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 13, column 0) (in '/tmp/RtmpBlBUkN/include_1/stan/functions/delay_lpmf.stan', line 202, column 4, included from
+#> Chain 1 '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 18, column 0) (in '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 427, column 6 to line 434, column 8)
+#> Chain 1 If this warning occurs sporadically, such as for highly constrained variable types like covariance matrices, then the sampler is fine,
+#> Chain 1 but if this warning occurs often then your model may be either severely ill-conditioned or misspecified.
+#> Chain 1 
+#> Chain 1 Informational Message: The current Metropolis proposal is about to be rejected because of the following issue:
+#> Chain 1 Exception: Exception: Exception: neg_binomial_2_log_lpmf: Log location parameter[8] is inf, but must be finite! (in '/tmp/RtmpBlBUkN/include_1/stan/functions/obs_lpmf.stan', line 35, column 4, included from
+#> Chain 1 '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 13, column 0) (in '/tmp/RtmpBlBUkN/include_1/stan/functions/delay_lpmf.stan', line 202, column 4, included from
+#> Chain 1 '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 18, column 0) (in '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 427, column 6 to line 434, column 8)
+#> Chain 1 If this warning occurs sporadically, such as for highly constrained variable types like covariance matrices, then the sampler is fine,
+#> Chain 1 but if this warning occurs often then your model may be either severely ill-conditioned or misspecified.
+#> Chain 1 
+#> Chain 1 Informational Message: The current Metropolis proposal is about to be rejected because of the following issue:
+#> Chain 1 Exception: Exception: Exception: neg_binomial_2_log_lpmf: Log location parameter[8] is inf, but must be finite! (in '/tmp/RtmpBlBUkN/include_1/stan/functions/obs_lpmf.stan', line 35, column 4, included from
+#> Chain 1 '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 13, column 0) (in '/tmp/RtmpBlBUkN/include_1/stan/functions/delay_lpmf.stan', line 202, column 4, included from
+#> Chain 1 '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 18, column 0) (in '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 427, column 6 to line 434, column 8)
+#> Chain 1 If this warning occurs sporadically, such as for highly constrained variable types like covariance matrices, then the sampler is fine,
+#> Chain 1 but if this warning occurs often then your model may be either severely ill-conditioned or misspecified.
+#> Chain 1 
+#> Chain 1 Informational Message: The current Metropolis proposal is about to be rejected because of the following issue:
+#> Chain 1 Exception: Exception: Exception: neg_binomial_2_log_lpmf: Log location parameter[12] is inf, but must be finite! (in '/tmp/RtmpBlBUkN/include_1/stan/functions/obs_lpmf.stan', line 35, column 4, included from
+#> Chain 1 '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 13, column 0) (in '/tmp/RtmpBlBUkN/include_1/stan/functions/delay_lpmf.stan', line 202, column 4, included from
+#> Chain 1 '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 18, column 0) (in '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 427, column 6 to line 434, column 8)
+#> Chain 1 If this warning occurs sporadically, such as for highly constrained variable types like covariance matrices, then the sampler is fine,
+#> Chain 1 but if this warning occurs often then your model may be either severely ill-conditioned or misspecified.
+#> Chain 1 
+#> Chain 1 Informational Message: The current Metropolis proposal is about to be rejected because of the following issue:
+#> Chain 1 Exception: Exception: Exception: neg_binomial_2_log_lpmf: Log location parameter[1] is inf, but must be finite! (in '/tmp/RtmpBlBUkN/include_1/stan/functions/obs_lpmf.stan', line 35, column 4, included from
+#> Chain 1 '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 13, column 0) (in '/tmp/RtmpBlBUkN/include_1/stan/functions/delay_lpmf.stan', line 202, column 4, included from
+#> Chain 1 '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 18, column 0) (in '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 427, column 6 to line 434, column 8)
+#> Chain 1 If this warning occurs sporadically, such as for highly constrained variable types like covariance matrices, then the sampler is fine,
+#> Chain 1 but if this warning occurs often then your model may be either severely ill-conditioned or misspecified.
+#> Chain 1 
+#> Chain 2 Informational Message: The current Metropolis proposal is about to be rejected because of the following issue:
+#> Chain 2 Exception: Exception: Exception: neg_binomial_2_log_lpmf: Log location parameter[8] is inf, but must be finite! (in '/tmp/RtmpBlBUkN/include_1/stan/functions/obs_lpmf.stan', line 35, column 4, included from
+#> Chain 2 '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 13, column 0) (in '/tmp/RtmpBlBUkN/include_1/stan/functions/delay_lpmf.stan', line 202, column 4, included from
+#> Chain 2 '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 18, column 0) (in '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 427, column 6 to line 434, column 8)
+#> Chain 2 If this warning occurs sporadically, such as for highly constrained variable types like covariance matrices, then the sampler is fine,
+#> Chain 2 but if this warning occurs often then your model may be either severely ill-conditioned or misspecified.
+#> Chain 2 
+#> Chain 2 Informational Message: The current Metropolis proposal is about to be rejected because of the following issue:
+#> Chain 2 Exception: Exception: Exception: neg_binomial_2_log_lpmf: Log location parameter[8] is inf, but must be finite! (in '/tmp/RtmpBlBUkN/include_1/stan/functions/obs_lpmf.stan', line 35, column 4, included from
+#> Chain 2 '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 13, column 0) (in '/tmp/RtmpBlBUkN/include_1/stan/functions/delay_lpmf.stan', line 202, column 4, included from
+#> Chain 2 '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 18, column 0) (in '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 427, column 6 to line 434, column 8)
+#> Chain 2 If this warning occurs sporadically, such as for highly constrained variable types like covariance matrices, then the sampler is fine,
+#> Chain 2 but if this warning occurs often then your model may be either severely ill-conditioned or misspecified.
+#> Chain 2 
+#> Chain 2 Informational Message: The current Metropolis proposal is about to be rejected because of the following issue:
+#> Chain 2 Exception: Exception: Exception: neg_binomial_2_log_lpmf: Log location parameter[8] is inf, but must be finite! (in '/tmp/RtmpBlBUkN/include_1/stan/functions/obs_lpmf.stan', line 35, column 4, included from
+#> Chain 2 '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 13, column 0) (in '/tmp/RtmpBlBUkN/include_1/stan/functions/delay_lpmf.stan', line 202, column 4, included from
+#> Chain 2 '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 18, column 0) (in '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 427, column 6 to line 434, column 8)
+#> Chain 2 If this warning occurs sporadically, such as for highly constrained variable types like covariance matrices, then the sampler is fine,
+#> Chain 2 but if this warning occurs often then your model may be either severely ill-conditioned or misspecified.
+#> Chain 2 
+#> Chain 2 Informational Message: The current Metropolis proposal is about to be rejected because of the following issue:
+#> Chain 2 Exception: Exception: Exception: neg_binomial_2_log_lpmf: Log location parameter[13] is inf, but must be finite! (in '/tmp/RtmpBlBUkN/include_1/stan/functions/obs_lpmf.stan', line 35, column 4, included from
+#> Chain 2 '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 13, column 0) (in '/tmp/RtmpBlBUkN/include_1/stan/functions/delay_lpmf.stan', line 202, column 4, included from
+#> Chain 2 '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 18, column 0) (in '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 427, column 6 to line 434, column 8)
+#> Chain 2 If this warning occurs sporadically, such as for highly constrained variable types like covariance matrices, then the sampler is fine,
+#> Chain 2 but if this warning occurs often then your model may be either severely ill-conditioned or misspecified.
+#> Chain 2 
+#> Chain 2 Informational Message: The current Metropolis proposal is about to be rejected because of the following issue:
+#> Chain 2 Exception: Exception: Exception: neg_binomial_2_log_lpmf: Precision parameter is inf, but must be positive finite! (in '/tmp/RtmpBlBUkN/include_1/stan/functions/obs_lpmf.stan', line 35, column 4, included from
+#> Chain 2 '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 13, column 0) (in '/tmp/RtmpBlBUkN/include_1/stan/functions/delay_lpmf.stan', line 202, column 4, included from
+#> Chain 2 '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 18, column 0) (in '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 427, column 6 to line 434, column 8)
+#> Chain 2 If this warning occurs sporadically, such as for highly constrained variable types like covariance matrices, then the sampler is fine,
+#> Chain 2 but if this warning occurs often then your model may be either severely ill-conditioned or misspecified.
+#> Chain 2 
+#> Chain 3 Informational Message: The current Metropolis proposal is about to be rejected because of the following issue:
+#> Chain 3 Exception: Exception: Exception: neg_binomial_2_log_lpmf: Log location parameter[8] is inf, but must be finite! (in '/tmp/RtmpBlBUkN/include_1/stan/functions/obs_lpmf.stan', line 35, column 4, included from
+#> Chain 3 '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 13, column 0) (in '/tmp/RtmpBlBUkN/include_1/stan/functions/delay_lpmf.stan', line 202, column 4, included from
+#> Chain 3 '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 18, column 0) (in '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 427, column 6 to line 434, column 8)
+#> Chain 3 If this warning occurs sporadically, such as for highly constrained variable types like covariance matrices, then the sampler is fine,
+#> Chain 3 but if this warning occurs often then your model may be either severely ill-conditioned or misspecified.
+#> Chain 3 
+#> Chain 3 Informational Message: The current Metropolis proposal is about to be rejected because of the following issue:
+#> Chain 3 Exception: Exception: Exception: neg_binomial_2_log_lpmf: Log location parameter[8] is inf, but must be finite! (in '/tmp/RtmpBlBUkN/include_1/stan/functions/obs_lpmf.stan', line 35, column 4, included from
+#> Chain 3 '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 13, column 0) (in '/tmp/RtmpBlBUkN/include_1/stan/functions/delay_lpmf.stan', line 202, column 4, included from
+#> Chain 3 '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 18, column 0) (in '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 427, column 6 to line 434, column 8)
+#> Chain 3 If this warning occurs sporadically, such as for highly constrained variable types like covariance matrices, then the sampler is fine,
+#> Chain 3 but if this warning occurs often then your model may be either severely ill-conditioned or misspecified.
+#> Chain 3 
+#> Chain 3 Informational Message: The current Metropolis proposal is about to be rejected because of the following issue:
+#> Chain 3 Exception: Exception: Exception: neg_binomial_2_log_lpmf: Log location parameter[8] is inf, but must be finite! (in '/tmp/RtmpBlBUkN/include_1/stan/functions/obs_lpmf.stan', line 35, column 4, included from
+#> Chain 3 '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 13, column 0) (in '/tmp/RtmpBlBUkN/include_1/stan/functions/delay_lpmf.stan', line 202, column 4, included from
+#> Chain 3 '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 18, column 0) (in '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 427, column 6 to line 434, column 8)
+#> Chain 3 If this warning occurs sporadically, such as for highly constrained variable types like covariance matrices, then the sampler is fine,
+#> Chain 3 but if this warning occurs often then your model may be either severely ill-conditioned or misspecified.
+#> Chain 3 
+#> Chain 3 Informational Message: The current Metropolis proposal is about to be rejected because of the following issue:
+#> Chain 3 Exception: Exception: Exception: neg_binomial_2_log_lpmf: Log location parameter[13] is inf, but must be finite! (in '/tmp/RtmpBlBUkN/include_1/stan/functions/obs_lpmf.stan', line 35, column 4, included from
+#> Chain 3 '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 13, column 0) (in '/tmp/RtmpBlBUkN/include_1/stan/functions/delay_lpmf.stan', line 202, column 4, included from
+#> Chain 3 '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 18, column 0) (in '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 427, column 6 to line 434, column 8)
+#> Chain 3 If this warning occurs sporadically, such as for highly constrained variable types like covariance matrices, then the sampler is fine,
+#> Chain 3 but if this warning occurs often then your model may be either severely ill-conditioned or misspecified.
+#> Chain 3 
+#> Chain 3 Informational Message: The current Metropolis proposal is about to be rejected because of the following issue:
+#> Chain 3 Exception: Exception: Exception: neg_binomial_2_log_lpmf: Precision parameter is 0, but must be positive finite! (in '/tmp/RtmpBlBUkN/include_1/stan/functions/obs_lpmf.stan', line 35, column 4, included from
+#> Chain 3 '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 13, column 0) (in '/tmp/RtmpBlBUkN/include_1/stan/functions/delay_lpmf.stan', line 202, column 4, included from
+#> Chain 3 '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 18, column 0) (in '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 427, column 6 to line 434, column 8)
+#> Chain 3 If this warning occurs sporadically, such as for highly constrained variable types like covariance matrices, then the sampler is fine,
+#> Chain 3 but if this warning occurs often then your model may be either severely ill-conditioned or misspecified.
+#> Chain 3 
+#> Chain 4 Informational Message: The current Metropolis proposal is about to be rejected because of the following issue:
+#> Chain 4 Exception: Exception: Exception: neg_binomial_2_log_lpmf: Precision parameter is 0, but must be positive finite! (in '/tmp/RtmpBlBUkN/include_1/stan/functions/obs_lpmf.stan', line 35, column 4, included from
+#> Chain 4 '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 13, column 0) (in '/tmp/RtmpBlBUkN/include_1/stan/functions/delay_lpmf.stan', line 202, column 4, included from
+#> Chain 4 '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 18, column 0) (in '/tmp/RtmpBlBUkN/model-116b686eb08d.stan', line 427, column 6 to line 434, column 8)
+#> Chain 4 If this warning occurs sporadically, such as for highly constrained variable types like covariance matrices, then the sampler is fine,
+#> Chain 4 but if this warning occurs often then your model may be either severely ill-conditioned or misspecified.
+#> Chain 4 
+#> Warning: 10 of 8000 (0.0%) transitions ended with a divergence.
+#> See https://mc-stan.org/misc/warnings for details.
 ```
 
 Alternatively, for production environments, we recommend using the `epinow()` function. It uses `estimate_infections()` internally and provides functionality for logging and saving results and plots in dedicated directories in the user's file system.
-
-## Forecasting secondary outcomes
-
-The `estimate_infections()` function works with a single time series of outcomes such as cases by symptom onset or hospitalisations.
-Sometimes one wants to further create forecasts of other secondary outcomes such as deaths.
-The package contains functionality to estimate the delay and scaling between multiple time series with the `estimate_secondary()` function, as well as for using this to make forecasts with the `forecast_secondary()` function.
 
 # Interpretation
 
@@ -310,6 +529,20 @@ To visualise the results one can use the `plot()` function that comes with the p
 
 ``` r
 plot(def)
+#> Warning in max.default(structure(numeric(0), class = "Date"), na.rm = FALSE):
+#> no non-missing arguments to max; returning -Inf
+#> Warning in max.default(structure(numeric(0), class = "Date"), na.rm = FALSE):
+#> no non-missing arguments to max; returning -Inf
+#> Warning in max.default(structure(numeric(0), class = "Date"), na.rm = FALSE):
+#> no non-missing arguments to max; returning -Inf
+#> Warning in max.default(structure(numeric(0), class = "Date"), na.rm = FALSE):
+#> no non-missing arguments to max; returning -Inf
+#> Warning: Removed 1 row containing missing values or values outside the scale range
+#> (`geom_ribbon()`).
+#> Removed 1 row containing missing values or values outside the scale range
+#> (`geom_ribbon()`).
+#> Removed 1 row containing missing values or values outside the scale range
+#> (`geom_ribbon()`).
 ```
 
 ![plot of chunk results](estimate_infections_workflow-results-1.png)
@@ -344,23 +577,7 @@ forecast_obj <- as_forecast_sample(
   observed = "confirm",
   sample_id = "sample"
 )
+#> Error in assert_forecast_generic(forecast, verbose): Assertion on 'data' failed: Must have at least 1 rows, but has 0 rows.
 score(forecast_obj)
-#>    horizon    bias      dss     crps overprediction underprediction dispersion
-#>      <num>   <num>    <num>    <num>          <num>           <num>      <num>
-#> 1:       1 -0.6505 13.31003 305.8814          0.000         190.593   115.2884
-#> 2:       2 -0.8755 15.26973 657.2073          0.000         529.589   127.6183
-#> 3:       3  0.2560 13.38751 190.0780         28.593           0.000   161.4850
-#> 4:       4 -0.5490 13.53322 317.1630          0.000         166.370   150.7930
-#> 5:       5  0.3910 13.79891 254.7470         70.291           0.000   184.4560
-#> 6:       6  0.1640 13.68110 204.2124         12.438           0.000   191.7744
-#> 7:       7  0.4320 13.76404 252.2392         78.715           0.000   173.5242
-#>    log_score      mad ae_median   se_mean
-#>        <num>    <num>     <num>     <num>
-#> 1:  7.756721 475.1733     528.5 220416.63
-#> 2:  8.763339 539.6664     990.0 850682.48
-#> 3:  7.476291 688.6677     211.0  87562.73
-#> 4:  7.945295 643.4484     543.0 203621.15
-#> 5:  7.620958 768.7281     354.5 224057.86
-#> 6:  7.573535 795.4149     146.5  89926.22
-#> 7:  7.522562 733.8870     363.5 246446.22
+#> Error: object 'forecast_obj' not found
 ```
