@@ -240,7 +240,7 @@ run_epinowcast <- function(data, generation_time, delays, rt, obs,
   )
 
   # Convert output to EpiNow2 format
-  enw_to_epinow2(enw_fit, data, generation_time)
+  enw_to_epinow2(enw_fit, data, generation_time, delays = delays)
 }
 
 #' Convert epinowcast output to EpiNow2 format
@@ -256,13 +256,15 @@ run_epinowcast <- function(data, generation_time, delays, rt, obs,
 #' @return An `estimate_infections` object.
 #'
 #' @keywords internal
-enw_to_epinow2 <- function(enw_fit, original_data, generation_time) {
+enw_to_epinow2 <- function(enw_fit, original_data, generation_time,
+                           delays = NULL) {
   ret <- list(
     fit = enw_fit$fit[[1]],
     enw_fit = enw_fit,
     args = list(
       enw_data = enw_fit$data[[1]],
-      generation_time = generation_time
+      generation_time = generation_time,
+      delays = delays
     ),
     observations = original_data
   )

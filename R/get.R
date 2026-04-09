@@ -433,14 +433,59 @@ get_predictions.estimate_infections <- function(
 #' @export
 get_predictions.estimate_truncation <- function(
     object,
-    format = c("summary"),
+    format = c("summary", "sample", "quantile"),
     CrIs = c(0.2, 0.5, 0.9),
     quantiles = c(0.05, 0.25, 0.5, 0.75, 0.95),
     ...) {
   format <- rlang::arg_match(format)
 
-  # Use epinowcast's nowcast summary
-  summary(object$enw_fit, type = "nowcast")
+  # Extract nowcast posterior predictions
+  nowcast <- summary(object$enw_fit, type = "nowcast")
+
+  if (format == "summary") {
+    return(nowcast)
+  }
+
+  # For sample/quantile, extract raw posterior draws
+  fit <- object$fit
+  pp_draws <- fit$draws(variables = "pp_inf_obs", format = "draws_matrix")
+  n_samples <- nrow(pp_draws)
+  n_cols <- ncol(pp_draws)
+
+  # Build sample-level predictions
+  latest <- object$enw_fit$latest[[1]]
+  dates <- latest$reference_date[seq_len(min(n_cols, nrow(latest)))]
+  forecast_date <- max(dates, na.rm = TRUE)
+
+  samples_dt <- enw_draws_to_dt(
+    pp_draws[, seq_len(length(dates)), drop = FALSE],
+    "predicted", dates
+  )
+  data.table::setnames(samples_dt, "value", "predicted")
+  samples_dt[, variable := NULL]
+  samples_dt[, forecast_date := forecast_date]
+  samples_dt[, horizon := as.numeric(date - forecast_date)]
+
+  if (format == "sample") {
+    data.table::setcolorder(
+      samples_dt,
+      c("forecast_date", "date", "horizon", "sample", "predicted")
+    )
+    return(samples_dt[])
+  }
+
+  # format == "quantile"
+  quant_dt <- samples_dt[
+    ,
+    .(predicted = stats::quantile(predicted, probs = quantiles)),
+    by = .(forecast_date, date, horizon)
+  ]
+  quant_dt[, quantile_level := rep(quantiles, .N / length(quantiles))]
+  data.table::setcolorder(
+    quant_dt,
+    c("forecast_date", "date", "horizon", "quantile_level", "predicted")
+  )
+  quant_dt[]
 }
 
 
@@ -450,6 +495,12 @@ get_parameters.epinowfit <- function(x, ...) {
   result <- list()
   if (!is.null(x$args$generation_time)) {
     result$generation_time <- x$args$generation_time
+  }
+  if (!is.null(x$args$delays)) {
+    result$reporting <- x$args$delays
+  }
+  if (!is.null(x$args$truncation)) {
+    result$truncation <- x$args$truncation
   }
   result
 }

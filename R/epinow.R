@@ -116,7 +116,7 @@ epinow <- function(data,
   if (!missing(target_date)) {
     assert_string(target_date)
   }
-  assert_string(id)
+  id <- "epinow"
   assert_logical(verbose)
 
   if (is.null(forecast)) {
