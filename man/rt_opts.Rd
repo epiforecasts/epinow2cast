@@ -37,6 +37,10 @@ are fit jointly with a global non-parametric effect and so represent a
 conservative estimate of break point changes (alter this by setting
 \code{gp = NULL}).}
 
+\item{future}{Character string, defaults to "latest". Controls how the
+reproduction number is projected beyond the data. Currently unused
+with the epinowcast backend.}
+
 \item{gp_on}{Character string, defaulting to "R_t-1". Indicates how the
 Gaussian process, if in use, should be applied to Rt. Currently supported
 options are applying the Gaussian process to the last estimated Rt (i.e

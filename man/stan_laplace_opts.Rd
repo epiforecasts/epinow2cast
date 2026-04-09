@@ -4,12 +4,9 @@
 \alias{stan_laplace_opts}
 \title{Stan Laplace algorithm Options}
 \usage{
-stan_laplace_opts(backend = "cmdstanr", trials = 10, ...)
+stan_laplace_opts(trials = 10, ...)
 }
 \arguments{
-\item{backend}{Character string indicating the backend to use for fitting
-stan models. Supported arguments are "rstan" (default) or "cmdstanr".}
-
 \item{trials}{Numeric, defaults to 10. Number of attempts to use
 rstan::vb()] before failing.}
 

@@ -25,7 +25,7 @@
 #' @return A `<generation_time_opts>` object summarising the input delay
 #' distributions.
 #' @seealso [convert_to_logmean()] [convert_to_logsd()]
-#' [bootstrapped_dist_fit()] [Gamma()] [LogNormal()] [Fixed()]
+#' [Gamma()] [LogNormal()] [Fixed()]
 #' @export
 #' @examples
 #' # default settings with a fixed generation time of 1
@@ -151,7 +151,7 @@ secondary_opts <- function(type = c("incidence", "prevalence"), ...) {
 #' @importFrom cli cli_abort
 #' @return A `<delay_opts>` object summarising the input delay distributions.
 #' @seealso [convert_to_logmean()] [convert_to_logsd()]
-#' [bootstrapped_dist_fit()] \code{\link{Distributions}}
+#' \code{\link{Distributions}}
 #' @export
 #' @examples
 #' # no delays
@@ -209,7 +209,7 @@ delay_opts <- function(dist = Fixed(0), default_cdf_cutoff = 0.001,
 #' distribution.
 #'
 #' @seealso [convert_to_logmean()] [convert_to_logsd()]
-#' [bootstrapped_dist_fit()] \code{\link{Distributions}}
+#' \code{\link{Distributions}}
 #' @export
 #' @examples
 #' # no truncation
@@ -303,6 +303,10 @@ trunc_opts <- function(dist = Fixed(0), default_cdf_cutoff = 0.001,
 #' growth rates more informative than reproduction numbers? Journal of the
 #' Royal Statistical Society: Series A (Statistics in Society) 185, S5–S15
 #' (2022).
+#'
+#' @param future Character string, defaults to "latest". Controls how the
+#'   reproduction number is projected beyond the data. Currently unused
+#'   with the epinowcast backend.
 #'
 #' @return An `<rt_opts>` object with settings defining the time-varying
 #' reproduction number.
@@ -667,7 +671,6 @@ stan_sampling_opts <- function(cores = getOption("mc.cores", 1L),
                                seed = as.integer(runif(1, 1, 1e8)),
                                future = FALSE,
                                max_execution_time = Inf,
-                               backend = "cmdstanr",
                                ...) {
   dot_args <- list(...)
   opts <- list(
@@ -728,18 +731,9 @@ stan_vb_opts <- function(samples = 2000,
 #' @export
 #' @examples
 #' stan_laplace_opts()
-stan_laplace_opts <- function(backend = "cmdstanr",
+stan_laplace_opts <- function(
                               trials = 10,
                               ...) {
-  if (backend != "cmdstanr") {
-    cli_abort(
-      c(
-        "!" = "Backend must be set to {col_blue(\"cmdstanr\")} to use
-        the Laplace algorithm.",
-        "i" = "Change {.var backend} to col_blue(\"cmdstanr\")}."
-      )
-    )
-  }
   c(list(trials = trials), ...)
 }
 
@@ -756,19 +750,10 @@ stan_laplace_opts <- function(backend = "cmdstanr",
 #' @export
 #' @examples
 #' stan_laplace_opts()
-stan_pathfinder_opts <- function(backend = "cmdstanr",
+stan_pathfinder_opts <- function(
                                  samples = 2000,
                                  trials = 10,
                                  ...) {
-  if (backend != "cmdstanr") {
-    cli_abort(
-      c(
-        "!" = "Backend must be set to {col_blue(\"cmdstanr\")} to use
-        the pathfinder algorithm.",
-        "i" = "Change {.var backend} to col_blue(\"cmdstanr\")}."
-      )
-    )
-  }
   opts <- list(
     trials = trials,
     draws = samples
@@ -776,41 +761,25 @@ stan_pathfinder_opts <- function(backend = "cmdstanr",
   c(opts, ...)
 }
 
-#' Stan Options
+#' Sampling options
 #'
 #' @description `r lifecycle::badge("stable")`
-#' Defines a list specifying the arguments passed to underlying stan
-#' backend functions via [stan_sampling_opts()] and [stan_vb_opts()]. Custom
-#' settings can be supplied which override the defaults.
-#'
-#' @param object Stan model object. By default uses the compiled package
-#' default if using the "rstan" backend, and the default model obtained using
-#' [epinow2_cmdstan_model()] if using the "cmdstanr" backend.
+#' Defines sampling options passed to the epinowcast backend.
 #'
 #' @param samples Numeric, defaults to 2000. Number of posterior samples.
-#' @param method A character string, defaulting to sampling. Currently supports
-#' MCMC sampling ("sampling") or approximate posterior sampling via
-#' variational inference ("vb") and, as experimental features if the
-#' "cmdstanr" backend is used, approximate posterior sampling with the
-#' laplace algorithm ("laplace") or pathfinder ("pathfinder").
 #'
-#' @param backend Character string indicating the backend to use for fitting
-#' stan models. Supported arguments are "rstan" (default) or "cmdstanr".
+#' @param warmup Numeric, defaults to 1000. Number of warmup samples per chain.
 #'
-#' @param return_fit Logical, defaults to TRUE. Should the fit stan model be
-#' returned.
+#' @param chains Numeric, defaults to 4. Number of MCMC chains.
 #'
-#' @param ... Additional parameters to pass to underlying option functions,
-#'   [stan_sampling_opts()] or [stan_vb_opts()], depending on the method
+#' @param return_fit Logical, defaults to TRUE. Should the fitted model be
+#'   returned.
 #'
-#' @importFrom rlang arg_match
-#' @importFrom cli cli_abort cli_warn col_blue
-#' @return A `<stan_opts>` object of arguments to pass to the appropriate
-#' rstan functions.
+#' @param ... Additional parameters passed to the sampler.
+#'
+#' @return A `<stan_opts>` object of sampling arguments.
 #' @export
-#' @seealso [stan_sampling_opts()] [stan_vb_opts()]
 #' @examples
-#' # using default of [rstan::sampling()]
 #' stan_opts(samples = 1000)
 #'
 #' # using vb

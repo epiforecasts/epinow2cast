@@ -2,49 +2,32 @@
 % Please edit documentation in R/opts.R
 \name{stan_opts}
 \alias{stan_opts}
-\title{Stan Options}
+\title{Sampling options}
 \usage{
 stan_opts(samples = 2000, warmup = 1000, chains = 4, return_fit = TRUE, ...)
 }
 \arguments{
 \item{samples}{Numeric, defaults to 2000. Number of posterior samples.}
 
-\item{return_fit}{Logical, defaults to TRUE. Should the fit stan model be
+\item{warmup}{Numeric, defaults to 1000. Number of warmup samples per chain.}
+
+\item{chains}{Numeric, defaults to 4. Number of MCMC chains.}
+
+\item{return_fit}{Logical, defaults to TRUE. Should the fitted model be
 returned.}
 
-\item{...}{Additional parameters to pass to underlying option functions,
-\code{\link[=stan_sampling_opts]{stan_sampling_opts()}} or \code{\link[=stan_vb_opts]{stan_vb_opts()}}, depending on the method}
-
-\item{object}{Stan model object. By default uses the compiled package
-default if using the "rstan" backend, and the default model obtained using
-\code{\link[=epinow2_cmdstan_model]{epinow2_cmdstan_model()}} if using the "cmdstanr" backend.}
-
-\item{method}{A character string, defaulting to sampling. Currently supports
-MCMC sampling ("sampling") or approximate posterior sampling via
-variational inference ("vb") and, as experimental features if the
-"cmdstanr" backend is used, approximate posterior sampling with the
-laplace algorithm ("laplace") or pathfinder ("pathfinder").}
-
-\item{backend}{Character string indicating the backend to use for fitting
-stan models. Supported arguments are "rstan" (default) or "cmdstanr".}
+\item{...}{Additional parameters passed to the sampler.}
 }
 \value{
-A \verb{<stan_opts>} object of arguments to pass to the appropriate
-rstan functions.
+A \verb{<stan_opts>} object of sampling arguments.
 }
 \description{
 \ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#stable}{\figure{lifecycle-stable.svg}{options: alt='[Stable]'}}}{\strong{[Stable]}}
-Defines a list specifying the arguments passed to underlying stan
-backend functions via \code{\link[=stan_sampling_opts]{stan_sampling_opts()}} and \code{\link[=stan_vb_opts]{stan_vb_opts()}}. Custom
-settings can be supplied which override the defaults.
+Defines sampling options passed to the epinowcast backend.
 }
 \examples{
-# using default of [rstan::sampling()]
 stan_opts(samples = 1000)
 
 # using vb
 stan_opts(method = "vb")
-}
-\seealso{
-\code{\link[=stan_sampling_opts]{stan_sampling_opts()}} \code{\link[=stan_vb_opts]{stan_vb_opts()}}
 }

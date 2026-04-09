@@ -157,7 +157,7 @@ check_generation_time <- function(dist) {
 #' @return Called for its side effects.
 #' @keywords internal
 check_sparse_pmf_tail <- function(pmf, span = 5, tol = 1e-6) {
-  if (all(tail(pmf, span) < tol)) {
+  if (all(utils::tail(pmf, span) < tol)) {
     cli_warn(
       c(
         "!" = "The PMF tail has {col_blue(span)} consecutive value{?s} smaller

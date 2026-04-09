@@ -14,7 +14,6 @@ stan_sampling_opts(
   seed = as.integer(runif(1, 1, 1e+08)),
   future = FALSE,
   max_execution_time = Inf,
-  backend = "cmdstanr",
   ...
 )
 }
@@ -51,9 +50,6 @@ kill off processing of each chain if not finished within the specified
 timeout. When more than 2 chains finish successfully estimates will still be
 returned. If less than 2 chains return within the allowed time then
 estimation will fail with an informative error.}
-
-\item{backend}{Character string indicating the backend to use for fitting
-stan models. Supported arguments are "rstan" (default) or "cmdstanr".}
 
 \item{...}{Additional parameters to pass to \code{\link[rstan:stanmodel-method-sampling]{rstan::sampling()}} or
 \code{\link[cmdstanr:model-method-sample]{cmdstanr::sample()}}.}

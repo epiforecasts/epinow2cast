@@ -67,5 +67,5 @@ gt_opts(example_generation_time)
 }
 \seealso{
 \code{\link[=convert_to_logmean]{convert_to_logmean()}} \code{\link[=convert_to_logsd]{convert_to_logsd()}}
-\code{\link[=bootstrapped_dist_fit]{bootstrapped_dist_fit()}} \code{\link[=Gamma]{Gamma()}} \code{\link[=LogNormal]{LogNormal()}} \code{\link[=Fixed]{Fixed()}}
+\code{\link[=Gamma]{Gamma()}} \code{\link[=LogNormal]{LogNormal()}} \code{\link[=Fixed]{Fixed()}}
 }
