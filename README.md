@@ -1,176 +1,59 @@
 
-# EpiNow2: Estimate real-time case counts and time-varying epidemiological parameters <a href="https://epiforecasts.io/EpiNow2/"><img src="man/figures/logo.png" align="right" height="139" alt="EpiNow2 website" /></a>
+# epinow2cast: EpiNow2 powered by epinowcast
 
-[![Lifecycle:
-maturing](https://img.shields.io/badge/lifecycle-maturing-blue.svg)](https://lifecycle.r-lib.org/articles/stages.html#maturing)
-[![R-CMD-check](https://github.com/epiforecasts/EpiNow2/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/epiforecasts/EpiNow2/actions/workflows/R-CMD-check.yaml)
-[![codecov](https://codecov.io/gh/epiforecasts/EpiNow2/branch/main/graph/badge.svg?token=FZWwEMdpq6)](https://app.codecov.io/gh/epiforecasts/EpiNow2)
-[![](https://cranlogs.r-pkg.org/badges/grand-total/EpiNow2)](https://cran.r-project.org/package=EpiNow2)
+> **This is an experimental rewrite of
+> [EpiNow2](https://github.com/epiforecasts/EpiNow2) that replaces all
+> internal Stan models with calls to the
+> [epinowcast](https://package.epinowcast.org/) package.** It is not yet
+> released and is under active development. See the [feature
+> status](#feature-status) below.
 
-[![MIT
-license](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/epiforecasts/EpiNow2/blob/main/LICENSE.md/)
-[![GitHub
-contributors](https://img.shields.io/github/contributors/epiforecasts/EpiNow2)](https://github.com/epiforecasts/EpiNow2/graphs/contributors)
-[![universe](https://epiforecasts.r-universe.dev/badges/EpiNow2)](http://epiforecasts.r-universe.dev/#package:EpiNow2)
-[![GitHub
-commits](https://img.shields.io/github/commits-since/epiforecasts/EpiNow2/v1.7.1.svg?color=orange)](https://GitHub.com/epiforecasts/EpiNow2/commit/main/)
-[![DOI](https://zenodo.org/badge/272995211.svg)](https://zenodo.org/badge/latestdoi/272995211)
+## What is this?
 
-## Summary
+`{epinow2cast}` provides the familiar EpiNow2 interface
+(`estimate_infections()`, `epinow()`, `regional_epinow()`) but delegates
+all Bayesian inference to `{epinowcast}`. This eliminates ~9,000 lines
+of Stan code from EpiNow2 and unifies the two packages under a single
+computational backend.
 
-`{EpiNow2}` estimates the time-varying reproduction number, growth rate,
-and doubling time using a range of open-source tools ([Abbott et
-al.](https://doi.org/10.12688/wellcomeopenres.16006.1)), and current
-best practices ([Gostic et
-al.](https://doi.org/10.1371/journal.pcbi.1008409)). It aims to help
-users avoid some of the limitations of naive implementations in a
-framework that is informed by community feedback and is actively
-supported.
+## Feature status
 
-Forecasting is also supported for the time-varying reproduction number,
-infections, and reported cases using the same generative process
-approach as used for estimation.
-
-<details>
-<summary>
-More details
-</summary>
-
-`{EpiNow2}` estimates the time-varying reproduction number on cases by
-date of infection (using a similar approach to that implemented in
-[`{EpiEstim}`](https://github.com/mrc-ide/EpiEstim)). True infections,
-treated as latent and unobserved, are estimated and then mapped to
-observed data (for example cases by date of report) via one or more
-delay distributions (in the examples in the package documentation these
-are an incubation period and a reporting delay) and a reporting model
-that can include weekly periodicity.
-
-Uncertainty is propagated from all inputs into the final parameter
-estimates, helping to mitigate spurious findings. This is handled
-internally. The time-varying reproduction estimates and the uncertain
-generation time also give time-varying estimates of the rate of growth.
-
-</details>
-<details>
-<summary>
-Models provided
-</summary>
-
-`{EpiNow2}` provides three models:
-
-- `estimate_infections()`: Reconstruct cases by date of infection from
-  reported cases.
-
-- `estimate_secondary()`: Estimate the relationship between primary and
-  secondary observations, for example, deaths (secondary) based on
-  hospital admissions (primary), or bed occupancy (secondary) based on
-  hospital admissions (primary).
-
-- `estimate_truncation()`: Estimate a truncation distribution from
-  multiple snapshots of the same data source over time. For more
-  flexibility, check out the
-  [`{epinowcast}`](https://package.epinowcast.org/) package.
-
-The default model in `estimate_infections()` uses a non-stationary
-Gaussian process to estimate the time-varying reproduction number and
-infer infections. Other options, which generally reduce runtimes at the
-cost of the granularity of estimates or real-time performance, include:
-
-- A stationary Gaussian process (faster to estimate but currently gives
-  reduced performance for real time estimates).
-- User specified breakpoints.
-- A fixed reproduction number.
-- A piecewise constant, combining a fixed reproduction number with
-  breakpoints.
-- A random walk, combining a fixed reproduction number with regularly
-  spaced breakpoints (i.e weekly).
-- A deconvolution/back-calculation method for inferring infections,
-  followed with calculating the time-varying reproduction number.
-- Adjustment for the remaining susceptible population beyond the
-  forecast horizon.
-
-By default, all these models are fit with [MCMC
-sampling](https://mc-stan.org/docs/reference-manual/mcmc.html) using the
-[`rstan`](https://mc-stan.org/users/interfaces/rstan) R package as the
-backend. Users can, however, switch to use approximate algorithms like
-[variational
-inference](https://en.wikipedia.org/wiki/Variational_Bayesian_methods),
-the
-[pathfinder](https://mc-stan.org/docs/reference-manual/pathfinder.html)
-algorithm, or [Laplace
-approximation](https://mc-stan.org/docs/reference-manual/laplace.html)
-especially for quick prototyping. The latter two methods are provided
-through the [`cmdstanr`](https://mc-stan.org/cmdstanr/) R package, so
-users will have to install that separately.
-
-The documentation for `estimate_infections` provides examples of the
-implementation of the different options available.
-
-`{EpiNow2}` is designed to be used via a single function call to two
-functions:
-
-- `epinow()`: Estimate Rt and cases by date of infection and forecast
-  these infections into the future.
-
-- `regional_epinow()`: Efficiently run `epinow()` across multiple
-  regions in an efficient manner.
-
-These two functions call `estimate_infections()`, which works to
-reconstruct cases by date of infection from reported cases.
-
-For more details on using each function corresponding function
-documentation.
-
-</details>
+| Feature                 | Status  | Notes                                                                             |
+|-------------------------|---------|-----------------------------------------------------------------------------------|
+| `estimate_infections()` | Working | Renewal equation via epinowcast                                                   |
+| `estimate_truncation()` | Working | Requires [epinowcast PR \#756](https://github.com/epinowcast/epinowcast/pull/756) |
+| `simulate_infections()` | Working | Pure R implementation                                                             |
+| `epinow()`              | Working |                                                                                   |
+| `regional_epinow()`     | Working |                                                                                   |
+| `get_samples()`         | Working | R, infections, growth_rate, reported_cases                                        |
+| `get_predictions()`     | Working | summary, sample, quantile formats                                                 |
+| `get_parameters()`      | Working | Returns generation time and delays                                                |
+| `summary()` / `plot()`  | Working |                                                                                   |
+| Random walk on Rt       | Working | `rt_opts(rw = 7)` for weekly                                                      |
+| Day-of-week effects     | Working | `obs_opts(week_effect = TRUE)`                                                    |
+| Forecasting             | Working | `forecast_opts(horizon = N)`                                                      |
+| Poisson / NegBin        | Working | `obs_opts(family = ...)`                                                          |
+| Reporting delays        | Working | Via `latent_reporting_delay`                                                      |
+| Gaussian process        | Removed | Use `rt_opts(rw = ...)` instead                                                   |
+| Back-calculation        | Removed |                                                                                   |
+| Population depletion    | Removed |                                                                                   |
+| `estimate_secondary()`  | Removed | Use epinowcast directly                                                           |
+| `forecast_infections()` | Removed | Use `forecast_opts()` in `estimate_infections()`                                  |
+| rstan backend           | Removed | cmdstanr only (via epinowcast)                                                    |
 
 ## Installation
 
-Install the released version of the package:
+This package is not on CRAN. Install from this repository:
 
 ``` r
-install.packages("EpiNow2")
+# install.packages("pak")
+pak::pkg_install("sbfnk/epinow2cast@epinowcast-backend")
 ```
 
-Install the development version of the package with:
-
-``` r
-install.packages("EpiNow2", repos = c("https://epiforecasts.r-universe.dev", getOption("repos")))
-```
-
-Alternatively, install the development version of the package with
-[pak](https://pak.r-lib.org/) as follows (few users should need to do
-this):
-
-``` r
-# check whether {pak} is installed
-if (!require("pak")) {
-  install.packages("pak")
-}
-pak::pkg_install("epiforecasts/EpiNow2")
-```
-
-If using `pak` fails, try:
-
-``` r
-# check whether {remotes} is installed
-if (!require("remotes")) {
-  install.packages("remotes")
-}
-remotes::install_github("epiforecasts/EpiNow2")
-```
-
-To build `{EpiNow2}` from source, users will need to configure their C
-toolchain. This is because `{EpiNow2}` implements the underlying models
-in Stan (a statistical modelling programming language), which is built
-on C++.
-
-Each operating system has a different set up procedure. Windows users
-need to install an appropriate version of
-[RTools](https://github.com/stan-dev/rstan/wiki/Configuring-C---Toolchain-for-Windows).
-Mac users can [follow these
-steps](https://github.com/stan-dev/rstan/wiki/Configuring-C---Toolchain-for-Mac),
-and Linux users can use [this
-guide](https://github.com/stan-dev/rstan/wiki/Configuring-C-Toolchain-for-Linux).
+Requires [`cmdstanr`](https://mc-stan.org/cmdstanr/) and a working
+CmdStan installation. See the [cmdstanr
+documentation](https://mc-stan.org/cmdstanr/articles/cmdstanr.html) for
+setup instructions.
 
 ## Resources
 
