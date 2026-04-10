@@ -47,7 +47,7 @@ jobs:
       - name: Install dependencies
         uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          extra-packages: any::roxygen2
+          extra-packages: any::roxygen2, epiforecasts/epinowcast
           needs: roxygen2
           dependencies: '"hard"'
 
