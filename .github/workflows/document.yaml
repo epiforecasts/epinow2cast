@@ -52,6 +52,7 @@ jobs:
           extra-packages: any::roxygen2
           needs: roxygen2
           dependencies: '"hard"'
+          extra-repositories: https://epinowcast.r-universe.dev
 
       - name: Document
         run: roxygen2::roxygenise()
