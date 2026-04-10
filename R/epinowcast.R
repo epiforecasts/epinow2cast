@@ -351,3 +351,4 @@ enw_draws_to_dt <- function(draws, variable, dates) {
     value = as.vector(draws[, seq_len(n_times)])
   )
 }
+
