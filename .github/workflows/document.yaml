@@ -46,14 +46,21 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-r-
 
+      - name: Set up additional repositories
+        run: |
+          writeLines(
+            'options(repos = c(epinowcast = "https://epinowcast.r-universe.dev", getOption("repos")))',
+            file.path(Sys.getenv("R_HOME"), "etc", "Rprofile.site"),
+            append = TRUE
+          )
+        shell: Rscript {0}
+
       - name: Install dependencies
         uses: r-lib/actions/setup-r-dependencies@v2
         with:
           extra-packages: any::roxygen2
           needs: roxygen2
           dependencies: '"hard"'
-        env:
-          RENV_CONFIG_REPOS_OVERRIDE: "https://packagemanager.posit.co/cran/__linux__/noble/latest,https://epinowcast.r-universe.dev"
 
       - name: Document
         run: roxygen2::roxygenise()
