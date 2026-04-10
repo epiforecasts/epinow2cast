@@ -1,3 +1,4 @@
+# epinowcast backend
 # epinow2cast translation layer
 #' Convert EpiNow2 incidence data to epinowcast format
 #'
