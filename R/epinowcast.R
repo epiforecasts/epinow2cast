@@ -1,3 +1,4 @@
+# epinow2cast translation layer
 #' Convert EpiNow2 incidence data to epinowcast format
 #'
 #' @description Converts a simple incidence time series as used by
