@@ -52,7 +52,8 @@ jobs:
           extra-packages: any::roxygen2
           needs: roxygen2
           dependencies: '"hard"'
-          extra-repositories: https://epinowcast.r-universe.dev
+        env:
+          RENV_CONFIG_REPOS_OVERRIDE: "https://packagemanager.posit.co/cran/__linux__/noble/latest,https://epinowcast.r-universe.dev"
 
       - name: Document
         run: roxygen2::roxygenise()
