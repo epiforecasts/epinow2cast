@@ -37,6 +37,7 @@ jobs:
         with:
           dependencies: NA
           extra-packages: |
+            epiforecasts/epinowcast
             covr
             any::cmdstanr
             testthat

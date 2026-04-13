@@ -23,6 +23,7 @@ jobs:
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
           extra-packages: |
+            epiforecasts/epinowcast
             local::.
             any::lintr
             any::cyclocomp

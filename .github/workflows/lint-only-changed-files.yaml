@@ -25,6 +25,7 @@ jobs:
         with:
           dependencies: NA
           extra-packages: |
+            epiforecasts/epinowcast
             here
             usethis
             any::cmdstanr

@@ -101,6 +101,7 @@ jobs:
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
           extra-packages: |
+            epiforecasts/epinowcast
             stan-dev/cmdstanr
       - name: Install cmdstan
         uses: epinowcast/actions/install-cmdstan@v1

@@ -33,6 +33,7 @@ jobs:
         with:
           dependencies: NA
           extra-packages: |
+            epiforecasts/epinowcast
             local::.
             any::scoringutils
 

@@ -44,6 +44,7 @@ jobs:
         with:
           dependencies: NA
           extra-packages: |
+            epiforecasts/epinowcast
             rcmdcheck
             rmarkdown
             any::cmdstanr
