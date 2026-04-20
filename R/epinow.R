@@ -49,36 +49,16 @@
 #' old_opts <- options()
 #' options(mc.cores = ifelse(interactive(), 4, 1))
 #'
-#' # set an example generation time. In practice this should use an estimate
-#' # from the literature or be estimated from data
-#' generation_time <- Gamma(
-#'   shape = Normal(1.3, 0.3),
-#'   rate = Normal(0.37, 0.09),
-#'   max = 14
-#' )
-#' # set an example incubation period. In practice this should use an estimate
-#' # from the literature or be estimated from data
-#' incubation_period <- LogNormal(
-#'   meanlog = Normal(1.6, 0.06),
-#'   sdlog = Normal(0.4, 0.07),
-#'   max = 14
-#' )
-#' # set an example reporting delay. In practice this should use an estimate
-#' # from the literature or be estimated from data
-#' reporting_delay <- LogNormal(mean = 2, sd = 1, max = 10)
-#'
 #' # example case data
 #' reported_cases <- example_confirmed[1:40]
 #'
 #' # estimate Rt and nowcast/forecast cases by date of infection
-#' # samples and calculation time have been reduced for this example
-#' # for real analyses, use at least samples = 2000
 #' out <- epinow(
 #'   data = reported_cases,
-#'   generation_time = gt_opts(generation_time),
-#'   rt = rt_opts(prior = LogNormal(mean = 2, sd = 0.1)),
-#'   delays = delay_opts(incubation_period + reporting_delay),
-#'   stan = stan_opts(samples = 100, warmup = 200)
+#'   generation_time = gt_opts(fix_parameters(example_generation_time)),
+#'   delays = delay_opts(fix_parameters(example_reporting_delay)),
+#'   rt = rt_opts(rw = 7),
+#'   stan = stan_opts(samples = 500)
 #' )
 #' # summary of the latest estimates
 #' summary(out)
