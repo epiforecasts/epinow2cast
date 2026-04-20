@@ -51,17 +51,17 @@ timeout. When more than 2 chains finish successfully estimates will still be
 returned. If less than 2 chains return within the allowed time then
 estimation will fail with an informative error.}
 
-\item{...}{Additional parameters to pass to \code{\link[rstan:stanmodel-method-sampling]{rstan::sampling()}} or
-\code{\link[cmdstanr:model-method-sample]{cmdstanr::sample()}}.}
+\item{...}{Additional parameters to pass to \code{\link[rstan:sampling]{rstan::sampling()}} or
+\code{\link[cmdstanr:sample]{cmdstanr::sample()}}.}
 }
 \value{
-A list of arguments to pass to \code{\link[rstan:stanmodel-method-sampling]{rstan::sampling()}} or
-\code{\link[cmdstanr:model-method-sample]{cmdstanr::sample()}}.
+A list of arguments to pass to \code{\link[rstan:sampling]{rstan::sampling()}} or
+\code{\link[cmdstanr:sample]{cmdstanr::sample()}}.
 }
 \description{
 \ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#stable}{\figure{lifecycle-stable.svg}{options: alt='[Stable]'}}}{\strong{[Stable]}}
-Defines a list specifying the arguments passed to either \code{\link[rstan:stanmodel-method-sampling]{rstan::sampling()}}
-or \code{\link[cmdstanr:model-method-sample]{cmdstanr::sample()}}. Custom settings can be supplied which override the
+Defines a list specifying the arguments passed to either \code{\link[rstan:sampling]{rstan::sampling()}}
+or \code{\link[cmdstanr:sample]{cmdstanr::sample()}}. Custom settings can be supplied which override the
 defaults.
 }
 \examples{
