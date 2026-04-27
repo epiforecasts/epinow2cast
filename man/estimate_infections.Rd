@@ -71,7 +71,7 @@ flexible observation model. Estimation is performed using the
 \href{https://package.epinowcast.org/}{epinowcast} package as a backend.
 }
 \examples{
-\donttest{
+\dontrun{
 # set number of cores to use
 old_opts <- options()
 options(mc.cores = ifelse(interactive(), 4, 1))

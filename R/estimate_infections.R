@@ -49,7 +49,7 @@
 #' [epinow()] [regional_epinow()]
 #' @importFrom checkmate assert_class assert_logical assert_string
 #' @examples
-#' \donttest{
+#' \dontrun{
 #' # set number of cores to use
 #' old_opts <- options()
 #' options(mc.cores = ifelse(interactive(), 4, 1))
