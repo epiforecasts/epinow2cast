@@ -31,7 +31,7 @@ Returns key summary plots for estimates. May be depreciated in later
 releases as current S3 methods are enhanced.
 }
 \examples{
-\\dontrun{
+\dontrun{
 # get example output form estimate_infections
 out <- readRDS(system.file(
   package = "EpiNow2", "extdata", "example_estimate_infections.rds"

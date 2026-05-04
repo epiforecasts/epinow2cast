@@ -37,7 +37,7 @@ Summarises results across regions either from input or from disk. See the
 examples for details.
 }
 \examples{
-\\dontrun{
+\dontrun{
 # get example multiregion estimates
 regional_out <- readRDS(system.file(
   package = "EpiNow2", "extdata", "example_regional_epinow.rds"

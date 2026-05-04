@@ -100,7 +100,7 @@ plot_CrIs <- function(plot, CrIs, alpha, linewidth,
 #' @importFrom purrr map
 #' @importFrom rlang arg_match
 #' @examples
-#' \\dontrun{
+#' \dontrun{
 #' # get example model results
 #' out <- readRDS(system.file(
 #'   package = "EpiNow2", "extdata", "example_estimate_infections.rds"
@@ -411,7 +411,7 @@ plot_summary <- function(summary_results,
 #' @return List of plots as produced by [report_plots()]
 #' @export
 #' @examples
-#' \\dontrun{
+#' \dontrun{
 #' # get example output
 #' out <- readRDS(system.file(
 #'   package = "EpiNow2", "extdata", "example_estimate_infections.rds"

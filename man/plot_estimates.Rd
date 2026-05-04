@@ -55,7 +55,7 @@ In future releases it may be depreciated in favour of increasing the
 functionality of the S3 plot methods.
 }
 \examples{
-\\dontrun{
+\dontrun{
 # get example model results
 out <- readRDS(system.file(
   package = "EpiNow2", "extdata", "example_estimate_infections.rds"

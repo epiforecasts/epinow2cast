@@ -26,7 +26,7 @@ List of plots as produced by \code{\link[=report_plots]{report_plots()}}
 \code{plot} method for class \verb{<estimate_infections>}.
 }
 \examples{
-\\dontrun{
+\dontrun{
 # get example output
 out <- readRDS(system.file(
   package = "EpiNow2", "extdata", "example_estimate_infections.rds"

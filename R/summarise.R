@@ -169,7 +169,7 @@ summarise_results <- function(regions,
 #' @importFrom futile.logger flog.info
 #' @importFrom cli cli_abort
 #' @examples
-#' \\dontrun{
+#' \dontrun{
 #' # get example output from regional_epinow model
 #' regional_out <- readRDS(system.file(
 #'   package = "EpiNow2", "extdata", "example_regional_epinow.rds"
@@ -536,7 +536,7 @@ summarise_key_measures <- function(regional_results = NULL,
 #' @importFrom cli cli_abort
 #' @keywords internal
 #' @examples
-#' \\dontrun{
+#' \dontrun{
 #' regional_out <- readRDS(system.file(
 #'   package = "EpiNow2", "extdata", "example_regional_epinow.rds"
 #' ))
