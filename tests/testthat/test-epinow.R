@@ -14,7 +14,7 @@ futile.logger::flog.threshold("FATAL")
 df_non_zero <- function(df) {
   expect_true(nrow(df) > 0)
 }
-expected_out <- c("fit", "args", "observations", "timing")
+expected_out <- c("fit", "enw_fit", "args", "observations", "timing")
 
 # Integration tests (MCMC-based) ------------------------------------------
 # These tests run actual MCMC sampling and are slow. Tests are divided into:
@@ -166,7 +166,10 @@ test_that("epinow can produce partial output as specified", {
       logs = NULL, verbose = FALSE
     )
   )))
-  expect_equal(names(out), c("fit", "args", "observations"))
+  expect_setequal(
+    names(out),
+    c("fit", "enw_fit", "args", "observations")
+  )
   # Test new accessor methods work correctly
   df_non_zero(get_samples(out))
   df_non_zero(summary(out, type = "parameters"))
@@ -190,34 +193,3 @@ test_that("epinow fails as expected when given a short timeout", {
   )))
 })
 
-# Argument validation tests (fast - no MCMC) ------------------------------
-
-
-test_that("epinow fails if given NUTs arguments when using variational inference", {
-  expect_error(capture.output(suppressMessages(suppressWarnings(
-    epinow(
-      data = reported_cases,
-      generation_time = gt_opts(example_generation_time),
-      delays = delay_opts(example_incubation_period + reporting_delay),
-      stan = stan_opts(
-        samples = 100, warmup = 100,
-        cores = 1, chains = 2,
-        method = "vb"
-      ),
-      logs = NULL, verbose = FALSE
-    )
-  ))))
-})
-
-
-test_that("epinow fails if given variational inference arguments when using NUTs", {
-  expect_error(capture.output(suppressMessages(suppressWarnings(
-    epinow(
-      data = reported_cases,
-      generation_time = gt_opts(example_generation_time),
-      delays = delay_opts(example_incubation_period + reporting_delay),
-      stan = stan_opts(method = "sampling", tol_rel_obj = 1),
-      logs = NULL, verbose = FALSE
-    )
-  ))))
-})

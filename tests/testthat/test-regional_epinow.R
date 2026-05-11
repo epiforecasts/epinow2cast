@@ -42,7 +42,7 @@ test_that("regional_epinow produces expected output when run with default settin
   ))
   expect_equal(
     names(out$regional$realland),
-    c("fit", "args", "observations", "timing")
+    c("fit", "enw_fit", "args", "observations", "timing")
   )
   expect_s3_class(out$regional$realland$timing, "difftime")
   # Test new accessor methods work correctly
@@ -118,7 +118,7 @@ test_that("regional_epinow produces expected output when run with region specifi
   ))
   expect_equal(
     names(out$regional$realland),
-    c("fit", "args", "observations", "timing")
+    c("fit", "enw_fit", "args", "observations", "timing")
   )
   expect_s3_class(out$regional$realland$timing, "difftime")
   # Test new accessor methods work correctly
