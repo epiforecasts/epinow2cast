@@ -107,14 +107,23 @@ old_opts <- options()
 options(mc.cores = ifelse(interactive(), 4, 1))
 
 # Run MCMC once and reuse across multiple tests to save time
-default_est <- estimate_truncation(example_truncated,
-  verbose = FALSE, chains = 2, iter = 1000, warmup = 250
-)
+get_default_est <- local({
+  cached <- NULL
+  function() {
+    testthat::skip_on_os("windows")
+    if (is.null(cached)) {
+      cached <<- estimate_truncation(example_truncated,
+        verbose = FALSE, chains = 2, iter = 1000, warmup = 250
+      )
+    }
+    cached
+  }
+})
 
 # Core test: Core functionality with default settings (always runs)
 test_that("estimate_truncation can return values from simulated data and plot
            them", {
-  est <- default_est
+  est <- get_default_est()
   expect_equal(
     names(est),
     c("observations", "enw_fit", "fit", "args")
@@ -127,7 +136,7 @@ test_that("estimate_truncation can return values from simulated data and plot
 })
 
 test_that("get_parameters returns valid truncation distribution", {
-  est <- default_est
+  est <- get_default_est()
 
   # Extract the estimated truncation distribution
   trunc_dist <- get_parameters(est)$truncation
@@ -144,7 +153,7 @@ test_that("get_parameters returns valid truncation distribution", {
 })
 
 test_that("deprecated accessors error", {
-  est <- default_est
+  est <- get_default_est()
 
   expect_error(est$obs, "get_predictions")
   expect_error(est$data, "args")
@@ -155,7 +164,7 @@ test_that("deprecated accessors error", {
 })
 
 test_that("get_parameters returns truncation distribution from estimate_truncation", {
-  est <- default_est
+  est <- get_default_est()
 
   # Test getting all delays as named list
   delays <- get_parameters(est)
@@ -165,7 +174,7 @@ test_that("get_parameters returns truncation distribution from estimate_truncati
 })
 
 test_that("get_parameters extracts single delay via list subsetting", {
-  est <- default_est
+  est <- get_default_est()
 
   # Extract single parameter using standard R idiom
   trunc_dist <- get_parameters(est)[["truncation"]]

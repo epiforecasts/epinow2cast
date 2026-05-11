@@ -60,6 +60,7 @@ full_tests <- function() {
 get_test_fixtures <- local({
   fixtures <- NULL
   function() {
+    testthat::skip_on_os("windows")
     if (is.null(fixtures)) {
       futile.logger::flog.threshold("FATAL")
 

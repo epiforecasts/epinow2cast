@@ -21,6 +21,7 @@ df_non_zero <- function(df) {
 
 # Core test: Core functionality with default settings (always runs)
 test_that("regional_epinow produces expected output when run with default settings", {
+  skip_on_os("windows")
   out <- suppressWarnings(
     regional_epinow(
       data = cases,

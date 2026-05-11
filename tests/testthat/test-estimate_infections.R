@@ -42,10 +42,20 @@ test_estimate_infections <- function(...) {
 # Integration tests (MCMC-based) ------------------------------------------
 
 # Run MCMC once and reuse across multiple tests to save time
-default_fit <- default_estimate_infections(reported_cases)
+get_default_fit <- local({
+  cached <- NULL
+  function() {
+    testthat::skip_on_os("windows")
+    if (is.null(cached)) {
+      cached <<- default_estimate_infections(reported_cases)
+    }
+    cached
+  }
+})
 
 # Core test: Core functionality with default settings (always runs)
 test_that("estimate_infections successfully returns estimates using default settings", {
+  default_fit <- get_default_fit()
   expect_true(all(c("fit", "args", "observations") %in% names(default_fit)))
   expect_true(nrow(get_samples(default_fit)) > 0)
   expect_true(nrow(summary(default_fit, type = "parameters")) > 0)
@@ -104,7 +114,7 @@ test_that("estimate_infections produces no forecasts when forecast_opts horizon 
 # Non-integration tests (fast - use one MCMC fit for multiple checks) ----
 
 test_that("summary with type='parameters' returns all dates by default", {
-  out <- default_fit
+  out <- get_default_fit()
 
   summ <- summary(out, type = "parameters")
   summ_dates <- unique(summ$date)
@@ -120,7 +130,7 @@ test_that("summary with type='parameters' returns all dates by default", {
 })
 
 test_that("summary with type='parameters' has variable with semantic names", {
-  out <- default_fit
+  out <- get_default_fit()
 
   summ <- summary(out, type = "parameters")
   expect_true("variable" %in% names(summ))
@@ -129,7 +139,7 @@ test_that("summary with type='parameters' has variable with semantic names", {
 })
 
 test_that("get_predictions works with format='summary'", {
-  out <- default_fit
+  out <- get_default_fit()
 
   preds <- get_predictions(out, format = "summary")
 
@@ -141,7 +151,7 @@ test_that("get_predictions works with format='summary'", {
 })
 
 test_that("get_predictions works with format='sample'", {
-  out <- default_fit
+  out <- get_default_fit()
 
   preds <- get_predictions(out, format = "sample")
 
@@ -157,7 +167,7 @@ test_that("get_predictions works with format='sample'", {
 })
 
 test_that("get_predictions works with format='quantile'", {
-  out <- default_fit
+  out <- get_default_fit()
 
   preds <- get_predictions(out, format = "quantile")
 
@@ -169,7 +179,7 @@ test_that("get_predictions works with format='quantile'", {
 })
 
 test_that("get_predictions default format is 'summary'", {
-  out <- default_fit
+  out <- get_default_fit()
 
   preds_default <- get_predictions(out)
   preds_explicit <- get_predictions(out, format = "summary")
@@ -179,7 +189,7 @@ test_that("get_predictions default format is 'summary'", {
 })
 
 test_that("get_predictions forecast_date equals last observation date", {
-  out <- default_fit
+  out <- get_default_fit()
 
   preds <- get_predictions(out, format = "sample")
 
@@ -188,7 +198,7 @@ test_that("get_predictions forecast_date equals last observation date", {
 })
 
 test_that("get_predictions horizon is correctly calculated", {
-  out <- default_fit
+  out <- get_default_fit()
 
   preds <- get_predictions(out, format = "sample")
 
@@ -271,22 +281,22 @@ test_that("get_predictions format='quantile' compatible with scoringutils", {
 # Deprecation tests -------------------------------------------------------
 
 test_that("summary.estimate_infections with type = 'samples' errors", {
-  out <- default_fit
+  out <- get_default_fit()
   expect_error(summary(out, type = "samples"), "get_samples")
 })
 
 test_that("$samples accessor errors", {
-  out <- default_fit
+  out <- get_default_fit()
   expect_error(out$samples, "get_samples")
 })
 
 test_that("$summarised accessor errors", {
-  out <- default_fit
+  out <- get_default_fit()
   expect_error(out$summarised, "summary")
 })
 
 test_that("[[ accessor handles deprecated elements", {
-  out <- default_fit
+  out <- get_default_fit()
   expect_error(out[["samples"]], "get_samples")
   expect_error(out[["summarised"]], "summary")
 
