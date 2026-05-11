@@ -111,14 +111,14 @@ rt_to_enw_formula <- function(rt) {
     rw_period <- rt$rw
     if (rw_period == 1) {
       # Daily random walk
-      formula <- ~ 0 + rw(day)
+      formula <- ~ 0 + rw(day, by = .group)
     } else {
       # Weekly or other period random walk
-      formula <- ~ 0 + rw(week)
+      formula <- ~ 0 + rw(week, by = .group)
     }
   } else {
-    # Default: daily random effects
-    formula <- ~ 0 + (1 | day)
+    # Default: per-group daily random effects (epinowcast's own default)
+    formula <- ~ 0 + (1 | day:.group)
   }
   formula
 }
