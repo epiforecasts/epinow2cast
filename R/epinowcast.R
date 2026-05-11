@@ -45,7 +45,9 @@ incidence_to_enw <- function(data, horizon = 0L) {
     obs <- data.table::rbindlist(list(obs, future_obs), fill = TRUE)
   }
 
-  epinowcast::enw_preprocess_data(obs, max_delay = 1)
+  # max_delay = 2 (rather than 1) avoids a bug in epinowcast's retrospective
+  # Stan code path that fails when forecast dates are flagged via .observed.
+  epinowcast::enw_preprocess_data(obs, max_delay = 2)
 }
 
 #' Translate EpiNow2 generation time to epinowcast PMF
@@ -195,11 +197,13 @@ run_epinowcast <- function(data, generation_time, delays, rt, obs,
   # the hierarchical funnel
   expectation_module$priors[variable == "expr_beta_sd", sd := 0.2]
 
-  # No reporting delay model — all delay handling is via
-  # latent_reporting_delay in the expectation module
+  # Minimal reporting delay model — all real delay handling is via
+  # latent_reporting_delay in the expectation module. enw_reference()
+  # requires either parametric or non_parametric to be non-zero when
+  # max_delay > 1, so use a constant non-parametric model.
   reference_module <- epinowcast::enw_reference(
     parametric = ~0,
-    non_parametric = ~0,
+    non_parametric = ~1,
     data = pobs
   )
 
