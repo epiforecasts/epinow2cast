@@ -220,9 +220,9 @@ estimate_truncation <- function(data,
   # Preprocess for epinowcast
   pobs <- epinowcast::enw_preprocess_data(enw_obs, max_delay = max_delay)
 
-  # No expectation model — just estimate the delay
+  # Minimal expectation model — focus is on the delay
   expectation_module <- epinowcast::enw_expectation(
-    r = ~0,
+    r = ~1,
     data = pobs
   )
 

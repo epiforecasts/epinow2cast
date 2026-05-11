@@ -443,6 +443,9 @@ get_predictions.estimate_truncation <- function(
 
   # Extract nowcast posterior predictions
   nowcast <- summary(object$enw_fit, type = "nowcast")
+  if ("reference_date" %in% names(nowcast)) {
+    data.table::setnames(nowcast, "reference_date", "date")
+  }
 
   if (format == "summary") {
     return(nowcast)
