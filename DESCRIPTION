@@ -132,6 +132,7 @@ Imports:
     truncnorm,
     utils
 Suggests:
+    cmdstanr,
     future,
     future.apply,
     knitr,
