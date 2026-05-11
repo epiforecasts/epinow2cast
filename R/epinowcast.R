@@ -303,32 +303,31 @@ extract_enw_samples <- function(object) {
   r_draws <- fit$draws(variables = "r", format = "draws_matrix")
   n_samples <- nrow(r_draws)
   n_r <- ncol(r_draws)
+  r_dates <- extend_dates(dates, n_r)
   out$growth_rate <- enw_draws_to_dt(
-    r_draws, "growth_rate", dates[seq_len(n_r)]
+    r_draws, "growth_rate", r_dates
   )
 
   # R = exp(r) when using generation time convolution
   out$R <- enw_draws_to_dt(
-    exp(r_draws), "R", dates[seq_len(n_r)]
+    exp(r_draws), "R", r_dates
   )
 
   # Infections (exp_llatent = log expected latent observations)
   lat_draws <- fit$draws(variables = "exp_llatent", format = "draws_matrix")
   n_lat <- ncol(lat_draws)
-  inf_dates <- dates[seq_len(min(n_lat, length(dates)))]
+  inf_dates <- extend_dates(dates, n_lat)
   out$infections <- enw_draws_to_dt(
-    exp(lat_draws[, seq_len(length(inf_dates)), drop = FALSE]),
-    "infections", inf_dates
+    exp(lat_draws), "infections", inf_dates
   )
 
   # Reported cases (pp_inf_obs = posterior predictive for observations)
   tryCatch({
     pp_draws <- fit$draws(variables = "pp_inf_obs", format = "draws_matrix")
     n_pp <- ncol(pp_draws)
-    pp_dates <- dates[seq_len(min(n_pp, length(dates)))]
+    pp_dates <- extend_dates(dates, n_pp)
     out$reported_cases <- enw_draws_to_dt(
-      pp_draws[, seq_len(length(pp_dates)), drop = FALSE],
-      "reported_cases", pp_dates
+      pp_draws, "reported_cases", pp_dates
     )
   }, error = function(e) NULL)
 
@@ -346,6 +345,18 @@ extract_enw_samples <- function(object) {
 #'
 #' @return A `data.table` with columns: variable, time, date, sample, value.
 #' @keywords internal
+#' Pad a date sequence to a target length with consecutive future dates
+#'
+#' @keywords internal
+extend_dates <- function(dates, n) {
+  if (n <= length(dates)) {
+    return(dates[seq_len(n)])
+  }
+  last <- max(dates, na.rm = TRUE)
+  extra <- seq.Date(last + 1L, by = "day", length.out = n - length(dates))
+  c(dates, extra)
+}
+
 enw_draws_to_dt <- function(draws, variable, dates) {
   n_samples <- nrow(draws)
   n_times <- length(dates)
