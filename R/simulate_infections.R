@@ -68,6 +68,13 @@ simulate_infections <- function(R,
   assert_class(delays, "delay_opts")
   assert_class(obs, "obs_opts")
 
+  check_simulate_certain(generation_time, "generation_time")
+  check_simulate_certain(delays, "delays")
+  if (obs$family == "negbin") {
+    check_simulate_fixed(obs$dispersion, "obs$dispersion")
+  }
+  check_simulate_fixed(obs$scale, "obs$scale")
+
   # Get generation time PMF
   gt_pmf <- gt_to_enw(generation_time)
   gt_len <- length(gt_pmf)
@@ -155,6 +162,34 @@ simulate_infections <- function(R,
 
   out <- data.table::rbindlist(list(inf_dt, rep_dt))
   out[]
+}
+
+check_simulate_certain <- function(x, arg) {
+  is_uncertain <- function(d) {
+    !all(vapply(get_parameters(d), is.numeric, logical(1)))
+  }
+  if (inherits(x, "multi_dist_spec")) {
+    uncertain <- any(vapply(x, is_uncertain, logical(1)))
+  } else {
+    uncertain <- is_uncertain(x)
+  }
+  if (uncertain) {
+    cli::cli_abort(c(
+      "!" = "{.arg {arg}} has uncertain parameters.",
+      "i" = "Wrap with {.fn fix_parameters} to obtain a fixed distribution."
+    ))
+  }
+  invisible(NULL)
+}
+
+check_simulate_fixed <- function(x, arg) {
+  if (!(get_distribution(x) == "fixed")) {
+    cli::cli_abort(c(
+      "!" = "{.arg {arg}} is uncertain.",
+      "i" = "Provide a fixed value via {.fn Fixed}."
+    ))
+  }
+  invisible(NULL)
 }
 
 #' Forecast infections
