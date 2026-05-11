@@ -75,7 +75,8 @@ test_that("estimate_infections works using the poisson observation model", {
 
 test_that("estimate_infections works using a random walk", {
   skip_integration()
-  test_estimate_infections(reported_cases, rt = rt_opts(rw = 7))
+  # rt_opts(rw = 7) is already the default in default_estimate_infections
+  test_estimate_infections(reported_cases)
 })
 
 test_that("estimate_infections works without setting a generation time", {
