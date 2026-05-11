@@ -223,7 +223,7 @@ run_epinowcast <- function(data, generation_time, delays, rt, obs,
     chains = chains,
     iter_sampling = samples,
     iter_warmup = warmup,
-    init_method = "pathfinder",
+    init_method = "prior",
     pp = TRUE,
     show_messages = verbose
   )
