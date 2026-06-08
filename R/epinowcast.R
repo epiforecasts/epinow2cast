@@ -109,14 +109,19 @@ rt_to_enw_formula <- function(rt) {
   }
 
   if (rt$rw > 0) {
-    # Random walk using epinowcast's rw() function
+    # Random walk using epinowcast's rw() function. The intercept is
+    # required so the fixed-effects design is non-empty: epinowcast
+    # routes rw() through its latent (ARIMA) backend and contributes no
+    # fixed-design columns, so `~ 0 + rw(...)` would yield a zero-column
+    # design. The intercept is dropped again when the design is
+    # converted to the Stan data list.
     rw_period <- rt$rw
     if (rw_period == 1) {
       # Daily random walk
-      formula <- ~ 0 + rw(day, by = .group)
+      formula <- ~ 1 + rw(day, by = .group)
     } else {
       # Weekly or other period random walk
-      formula <- ~ 0 + rw(week, by = .group)
+      formula <- ~ 1 + rw(week, by = .group)
     }
   } else {
     # Default: per-group daily random effects (epinowcast's own default)
