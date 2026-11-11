@@ -20,7 +20,7 @@ test_that("simulate_infections works as expected with standard parameters", {
   sim <- test_simulate_infections(
     generation_time = gt_opts(Fixed(1))
   )
-  expect_equal(nrow(sim), 2 * nrow(R))
+  expect_equal(nrow(sim), 2 * nrow(R) + 2)
   expect_snapshot_output(sim)
   set.seed(Sys.time())
 })
@@ -30,10 +30,10 @@ test_that("simulate_infections works as expected with additional parameters", {
   sim <- test_simulate_infections(
     generation_time = gt_opts(fix_parameters(example_generation_time)),
     delays = delay_opts(fix_parameters(example_reporting_delay)),
-    obs = obs_opts(family = "negbin", dispersion = Normal(mean = 0.5, sd = 0)),
+    obs = obs_opts(family = "negbin", dispersion = Fixed(0.5)),
     seeding_time = 10
   )
-  expect_equal(nrow(sim), 2 * nrow(R))
+  expect_equal(nrow(sim), 2 * nrow(R) + 10)
   expect_snapshot_output(sim)
   set.seed(Sys.time())
 })

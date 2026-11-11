@@ -45,7 +45,9 @@ incidence_to_enw <- function(data, horizon = 0L) {
     obs <- data.table::rbindlist(list(obs, future_obs), fill = TRUE)
   }
 
-  epinowcast::enw_preprocess_data(obs, max_delay = 1)
+  # max_delay = 2 (rather than 1) avoids a bug in epinowcast's retrospective
+  # Stan code path that fails when forecast dates are flagged via .observed.
+  epinowcast::enw_preprocess_data(obs, max_delay = 2)
 }
 
 #' Translate EpiNow2 generation time to epinowcast PMF
@@ -107,18 +109,23 @@ rt_to_enw_formula <- function(rt) {
   }
 
   if (rt$rw > 0) {
-    # Random walk using epinowcast's rw() function
+    # Random walk using epinowcast's rw() function. The intercept is
+    # required so the fixed-effects design is non-empty: epinowcast
+    # routes rw() through its latent (ARIMA) backend and contributes no
+    # fixed-design columns, so `~ 0 + rw(...)` would yield a zero-column
+    # design. The intercept is dropped again when the design is
+    # converted to the Stan data list.
     rw_period <- rt$rw
     if (rw_period == 1) {
       # Daily random walk
-      formula <- ~ 0 + rw(day)
+      formula <- ~ 1 + rw(day, by = .group)
     } else {
       # Weekly or other period random walk
-      formula <- ~ 0 + rw(week)
+      formula <- ~ 1 + rw(week, by = .group)
     }
   } else {
-    # Default: daily random effects
-    formula <- ~ 0 + (1 | day)
+    # Default: per-group daily random effects (epinowcast's own default)
+    formula <- ~ 0 + (1 | day:.group)
   }
   formula
 }
@@ -195,11 +202,13 @@ run_epinowcast <- function(data, generation_time, delays, rt, obs,
   # the hierarchical funnel
   expectation_module$priors[variable == "expr_beta_sd", sd := 0.2]
 
-  # No reporting delay model — all delay handling is via
-  # latent_reporting_delay in the expectation module
+  # Minimal reporting delay model — all real delay handling is via
+  # latent_reporting_delay in the expectation module. enw_reference()
+  # requires either parametric or non_parametric to be non-zero when
+  # max_delay > 1, so use a constant non-parametric model.
   reference_module <- epinowcast::enw_reference(
     parametric = ~0,
-    non_parametric = ~0,
+    non_parametric = ~1,
     data = pobs
   )
 
@@ -223,7 +232,7 @@ run_epinowcast <- function(data, generation_time, delays, rt, obs,
     chains = chains,
     iter_sampling = samples,
     iter_warmup = warmup,
-    init_method = "pathfinder",
+    init_method = "prior",
     pp = TRUE,
     show_messages = verbose
   )
@@ -299,32 +308,31 @@ extract_enw_samples <- function(object) {
   r_draws <- fit$draws(variables = "r", format = "draws_matrix")
   n_samples <- nrow(r_draws)
   n_r <- ncol(r_draws)
+  r_dates <- extend_dates(dates, n_r)
   out$growth_rate <- enw_draws_to_dt(
-    r_draws, "growth_rate", dates[seq_len(n_r)]
+    r_draws, "growth_rate", r_dates
   )
 
   # R = exp(r) when using generation time convolution
   out$R <- enw_draws_to_dt(
-    exp(r_draws), "R", dates[seq_len(n_r)]
+    exp(r_draws), "R", r_dates
   )
 
   # Infections (exp_llatent = log expected latent observations)
   lat_draws <- fit$draws(variables = "exp_llatent", format = "draws_matrix")
   n_lat <- ncol(lat_draws)
-  inf_dates <- dates[seq_len(min(n_lat, length(dates)))]
+  inf_dates <- extend_dates(dates, n_lat)
   out$infections <- enw_draws_to_dt(
-    exp(lat_draws[, seq_len(length(inf_dates)), drop = FALSE]),
-    "infections", inf_dates
+    exp(lat_draws), "infections", inf_dates
   )
 
   # Reported cases (pp_inf_obs = posterior predictive for observations)
   tryCatch({
     pp_draws <- fit$draws(variables = "pp_inf_obs", format = "draws_matrix")
     n_pp <- ncol(pp_draws)
-    pp_dates <- dates[seq_len(min(n_pp, length(dates)))]
+    pp_dates <- extend_dates(dates, n_pp)
     out$reported_cases <- enw_draws_to_dt(
-      pp_draws[, seq_len(length(pp_dates)), drop = FALSE],
-      "reported_cases", pp_dates
+      pp_draws, "reported_cases", pp_dates
     )
   }, error = function(e) NULL)
 
@@ -342,6 +350,18 @@ extract_enw_samples <- function(object) {
 #'
 #' @return A `data.table` with columns: variable, time, date, sample, value.
 #' @keywords internal
+#' Pad a date sequence to a target length with consecutive future dates
+#'
+#' @keywords internal
+extend_dates <- function(dates, n) {
+  if (n <= length(dates)) {
+    return(dates[seq_len(n)])
+  }
+  last <- max(dates, na.rm = TRUE)
+  extra <- seq.Date(last + 1L, by = "day", length.out = n - length(dates))
+  c(dates, extra)
+}
+
 enw_draws_to_dt <- function(draws, variable, dates) {
   n_samples <- nrow(draws)
   n_times <- length(dates)

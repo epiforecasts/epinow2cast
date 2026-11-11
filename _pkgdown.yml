@@ -34,32 +34,20 @@ navbar:
       menu:
       - text: R Reference
         href: reference/index.html
-      - text: Stan Reference
-        href: https://epiforecasts.io/EpiNow2/stan/
     modeldefs:
       text: Model definitions
       menu:
       - text: estimate_infections()
         href: articles/estimate_infections.html
-      - text: estimate_secondary()
-        href: articles/estimate_secondary.html
-      - text: estimate_truncation()
-        href: articles/estimate_truncation.html
-      - text: Gaussian Process implementation details
-        href: articles/gaussian_process_implementation_details.html
     usage:
       text: Usage
       menu:
       - text: Workflow for Rt estimation and forecasting
         href: articles/estimate_infections_workflow.html
-      - text: Prior choice and specification guide
-        href: articles/prior_choice_guide.html
       - text: "Examples: estimate_infections()"
         href: articles/estimate_infections_options.html
       - text: Using epinow() for running in production mode
         href: articles/epinow.html
-      - text: Forecasting multiple data streams
-        href: articles/forecasting_multiple_data_streams.html
     casestudies:
       text: Case studies
       menu:
@@ -81,9 +69,6 @@ reference:
   contents:
   - estimate_infections
   - forecast_infections
-  - estimate_secondary
-  - forecast_secondary
-  - estimate_delay
   - estimate_truncation
 
 - title: Specify Arguments
@@ -140,18 +125,10 @@ reference:
   - get_distribution
   - is_constrained
 
-- title: Fit Delay Distributions
-  desc: Functions to fit delay distributions
-  contents:
-  - bootstrapped_dist_fit
-  - dist_fit
-
 - title: Simulation
   desc: Functions to help with simulating data or mapping to reported cases
   contents:
   - simulate_infections
-  - simulate_secondary
-  - convolve_and_scale
 
 - title: Data
   desc: Package datasets that may be used to parameterise other functions or in examples
@@ -187,7 +164,6 @@ reference:
   - convert_to_logsd
   - growth_to_R
   - R_to_growth
-  - update_secondary_args
 
 - title: Internal
   contents:

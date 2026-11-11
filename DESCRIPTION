@@ -132,6 +132,7 @@ Imports:
     truncnorm,
     utils
 Suggests:
+    cmdstanr,
     future,
     future.apply,
     knitr,
@@ -144,7 +145,7 @@ Suggests:
     withr
 Additional_repositories:
     https://epiforecasts.r-universe.dev,
-    https://production.r-multiverse.org/2025-12-15
+    https://production.r-multiverse.org/2026-06-15
 Config/testthat/edition: 3
 Config/Needs/dev:
     covr,
@@ -160,6 +161,6 @@ Encoding: UTF-8
 Language: en-GB
 LazyData: true
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.3
 SystemRequirements: cmdstan
 VignetteBuilder: knitr
+Config/roxygen2/version: 8.0.0

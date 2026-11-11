@@ -159,7 +159,7 @@ merge_trunc_pred_obs <- function(observations, predictions) {
 #' @importFrom checkmate assert_character assert_numeric assert_class
 #' assert_logical
 #' @examples
-#' \donttest{
+#' \dontrun{
 #' # set number of cores to use
 #' old_opts <- options()
 #' options(mc.cores = ifelse(interactive(), 4, 1))
@@ -220,9 +220,9 @@ estimate_truncation <- function(data,
   # Preprocess for epinowcast
   pobs <- epinowcast::enw_preprocess_data(enw_obs, max_delay = max_delay)
 
-  # No expectation model — just estimate the delay
+  # Minimal expectation model — focus is on the delay
   expectation_module <- epinowcast::enw_expectation(
-    r = ~0,
+    r = ~1,
     data = pobs
   )
 

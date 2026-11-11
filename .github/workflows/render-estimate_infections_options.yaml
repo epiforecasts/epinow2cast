@@ -32,7 +32,7 @@ jobs:
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
           dependencies: NA
-          extra-packages: local::., epiforecasts/epinowcast
+          extra-packages: local::., epiforecasts/epinowcast, any::knitr
 
       - name: Render vignette
         run: |
