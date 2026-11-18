@@ -145,7 +145,7 @@ Suggests:
     withr
 Additional_repositories:
     https://epiforecasts.r-universe.dev,
-    https://production.r-multiverse.org/2026-03-15
+    https://production.r-multiverse.org/2026-06-15
 Config/testthat/edition: 3
 Config/Needs/dev:
     covr,
@@ -163,4 +163,4 @@ LazyData: true
 Roxygen: list(markdown = TRUE)
 SystemRequirements: cmdstan
 VignetteBuilder: knitr
-Config/roxygen2/version: 8.0.0
+Config/roxygen2/version: 8.1.1
