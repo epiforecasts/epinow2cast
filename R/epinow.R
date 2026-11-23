@@ -41,7 +41,7 @@
 #' @importFrom futile.logger flog.fatal flog.warn flog.error flog.debug ftry
 #' @importFrom rlang cnd_muffle
 #' @importFrom checkmate assert_string assert_path_for_output
-#' assert_date assert_logical
+#' @importFrom checkmate assert_date assert_logical
 #' @importFrom R.utils isDirectory
 #' @examples
 #' \dontrun{

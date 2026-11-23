@@ -25,7 +25,7 @@
 #' @inheritParams estimate_infections
 #' @inheritParams calc_CrIs
 #' @importFrom checkmate assert_data_frame assert_date assert_numeric
-#'   assert_subset assert_integerish
+#' @importFrom checkmate assert_subset assert_integerish
 #' @importFrom data.table data.table merge.data.table nafill rbindlist
 #' @importFrom cli cli_abort
 #' @return A data.table of simulated infections (variable `infections`) and
