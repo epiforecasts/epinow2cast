@@ -157,7 +157,7 @@ merge_trunc_pred_obs <- function(observations, predictions) {
 #' @importFrom data.table setcolorder
 #' @importFrom rlang arg_match
 #' @importFrom checkmate assert_character assert_numeric assert_class
-#' assert_logical
+#' @importFrom checkmate assert_logical
 #' @examples
 #' \dontrun{
 #' # set number of cores to use

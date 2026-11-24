@@ -15,7 +15,7 @@
 #' "estimate_infections", "estimate_truncation", or "estimate_secondary".
 #' This is used to determine which checks to perform on the data input.
 #' @importFrom checkmate assert_data_frame assert_date assert_names
-#'   assert_numeric
+#' @importFrom checkmate assert_numeric
 #' @importFrom purrr walk
 #' @importFrom rlang arg_match
 #' @return Called for its side effects.
