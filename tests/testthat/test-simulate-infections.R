@@ -38,6 +38,26 @@ test_that("simulate_infections works as expected with additional parameters", {
   set.seed(Sys.time())
 })
 
+test_that("simulate_infections draws reported cases with the stated mean and dispersion", {
+  set.seed(123)
+  flat <- data.frame(
+    date = seq.Date(as.Date("2023-01-01"), length.out = 200, by = "day"),
+    R = 1
+  )
+  sim <- simulate_infections(
+    R = flat,
+    initial_infections = 100,
+    generation_time = gt_opts(Fixed(1)),
+    delays = delay_opts(fix_parameters(example_reporting_delay)),
+    obs = obs_opts(family = "negbin", dispersion = Fixed(0.5)),
+    seeding_time = 10
+  )
+  reported <- sim[variable == "reported_cases", value]
+  expect_equal(mean(reported), 100, tolerance = 0.1)
+  expect_equal(var(reported), 100 + 0.5^2 * 100^2, tolerance = 0.25)
+  set.seed(Sys.time())
+})
+
 test_that("simulate_infections fails with uncertain parameters", {
   expect_error(
     test_simulate_infections(
