@@ -41,7 +41,7 @@ test_that("simulate_infections works as expected with additional parameters", {
 test_that("simulate_infections draws reported cases with the stated mean and dispersion", {
   set.seed(123)
   flat <- data.frame(
-    date = seq.Date(as.Date("2023-01-01"), length.out = 200, by = "day"),
+    date = seq.Date(as.Date("2023-01-01"), length.out = 5000, by = "day"),
     R = 1
   )
   sim <- simulate_infections(
